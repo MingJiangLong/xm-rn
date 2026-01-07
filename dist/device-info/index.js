@@ -9,11 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useDeviceModule = void 0;
+exports.useDeviceInfo = void 0;
 const react_native_1 = require("react-native");
 const add_timeout_1 = require("../add-timeout");
 const to_fixed_1 = require("../format/to-fixed");
-const useDeviceModule = (DeviceInfo) => {
+const useDeviceInfo = (DeviceInfo) => {
     const fetchIpAddress = (0, add_timeout_1.addTimeout)(function () {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -114,4 +114,4 @@ const useDeviceModule = (DeviceInfo) => {
         buildWebviewEnv
     };
 };
-exports.useDeviceModule = useDeviceModule;
+exports.useDeviceInfo = useDeviceInfo;

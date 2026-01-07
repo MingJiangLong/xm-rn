@@ -15,7 +15,7 @@ type I_DeviceBasicModule = {
     syncUniqueId: () => Promise<any>;
     check: () => Promise<boolean>;
 };
-export declare const useDeviceModule: <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
+export declare const useDeviceInfo: <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
     buildIOSDeviceInfo: () => Promise<string>;
     buildDefaultPostData: () => Promise<{
         reqSource: string;
