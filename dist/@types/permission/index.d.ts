@@ -1,3 +1,11 @@
+import { I_BasicFirebase } from "../firebase";
+type I_PermissionBasicModule = {
+    PERMISSIONS: any;
+    RESULTS: any;
+    request: (...args: any[]) => Promise<any>;
+    requestMultiple: (...args: any[]) => Promise<any>;
+};
+type XM_PermissionStatus = "unavailable" | "blocked" | "denied" | "granted" | "limited" | "ignored_permission";
 export declare enum PermissionCode {
     Camera = "0",
     Application = "1",
@@ -15,6 +23,23 @@ export declare enum PermissionCode {
     PersonalInfo = "9",
     Wifi = "11"
 }
+export declare const usePermission: <T extends I_PermissionBasicModule, F extends I_BasicFirebase>(permissionModule: T, firebaseModule: F) => {
+    requestPermission: (permissionCode: PermissionCode) => Promise<XM_PermissionStatus>;
+    requestMultiplePermissions: (permissions: PermissionCode[]) => Promise<({
+        serviceCode: PermissionCode;
+        status: XM_PermissionStatus;
+    } | {
+        serviceCode: PermissionCode.Contact;
+        status: any;
+    })[] | ({
+        serviceCode: PermissionCode;
+        status: XM_PermissionStatus;
+    } | {
+        serviceCode: PermissionCode.Camera | PermissionCode.Application | PermissionCode.SMS | PermissionCode.Location | PermissionCode.PhoneState | PermissionCode.CallLog | PermissionCode.Calendar | PermissionCode.Microphone | PermissionCode.UserTracking | PermissionCode.Photo | PermissionCode.Finger | PermissionCode.PersonalInfo | PermissionCode.Wifi;
+        status: any;
+    })[]>;
+    updatePermissionsInfoMap: (permissionsInfo: Record<PermissionCode, any>) => void;
+};
 declare class RequestPermissionStatusManager {
     private __status__;
     get status(): "requesting" | "idle";

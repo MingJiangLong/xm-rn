@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.useFirebase = void 0;
 const react_native_1 = require("react-native");
 const add_timeout_1 = require("../add-timeout");
 const to_1 = require("../to");
@@ -53,3 +54,4 @@ const useFirebase = (module) => {
         getFirebaseTokens
     };
 };
+exports.useFirebase = useFirebase;

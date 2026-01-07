@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requestPermissionStatusManager = exports.PermissionCode = void 0;
+exports.requestPermissionStatusManager = exports.usePermission = exports.PermissionCode = void 0;
 const react_native_1 = require("react-native");
 const IGNORED_PERMISSION = "ignored_permission";
 var PermissionCode;
@@ -175,6 +175,7 @@ const usePermission = (permissionModule, firebaseModule) => {
         updatePermissionsInfoMap
     };
 };
+exports.usePermission = usePermission;
 class RequestPermissionStatusManager {
     constructor() {
         this.__status__ = "idle";

@@ -1,0 +1,36 @@
+name: Build and Deploy
+on: 
+  push:
+    branches:
+      - main
+jobs:
+  build-and-deploy:
+    # 虚拟机环境 ubuntu-latest，ubuntu-18.04或ubuntu-16.04
+    # windows-latest，windows-2019或windows-2016
+    # macOS-latest或macOS-10.14
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: 设置Node环境
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.18.0
+      - name: 下载依赖
+        run: npm install
+
+      - name: 编译
+        run: npx tsc  
+        env:
+            CI: true
+
+      - name: 发布
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: xm-rn-deploy
+          FOLDER: dist # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch
