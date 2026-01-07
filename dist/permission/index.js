@@ -31,7 +31,7 @@ var PermissionCode;
     PermissionCode["Wifi"] = "11";
 })(PermissionCode || (exports.PermissionCode = PermissionCode = {}));
 const usePermission = (permissionModule, firebaseModule) => {
-    const { PERMISSIONS, RESULTS, request, requestMultiple } = permissionModule;
+    const { PERMISSIONS, RESULTS, request, requestMultiple, openSettings } = permissionModule;
     let PermissionsInfo = {
         [PermissionCode.Camera]: react_native_1.Platform.select({
             android: PERMISSIONS.ANDROID.CAMERA,
@@ -178,7 +178,8 @@ const usePermission = (permissionModule, firebaseModule) => {
     return {
         requestPermission,
         requestMultiplePermissions,
-        updatePermissionsInfoMap
+        updatePermissionsInfoMap,
+        openSettings
     };
 };
 exports.usePermission = usePermission;

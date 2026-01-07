@@ -8,6 +8,7 @@ type I_PermissionBasicModule = {
     RESULTS: any
     request: (...args: any[]) => Promise<any>
     requestMultiple: (...args: any[]) => Promise<any>
+    openSettings: (...args: any) => Promise<any>
 }
 const IGNORED_PERMISSION = "ignored_permission"
 type XM_PermissionStatus = "unavailable" | "blocked" | "denied" | "granted" | "limited" | "ignored_permission"
@@ -35,7 +36,7 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
 ) => {
 
 
-    const { PERMISSIONS, RESULTS, request, requestMultiple } = permissionModule;
+    const { PERMISSIONS, RESULTS, request, requestMultiple, openSettings } = permissionModule;
     let PermissionsInfo: Record<PermissionCode, any> = {
         [PermissionCode.Camera]: Platform.select({
             android: PERMISSIONS.ANDROID.CAMERA,
@@ -203,7 +204,8 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
     return {
         requestPermission,
         requestMultiplePermissions,
-        updatePermissionsInfoMap
+        updatePermissionsInfoMap,
+        openSettings
     }
 
 }

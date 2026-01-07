@@ -4,6 +4,7 @@ type I_PermissionBasicModule = {
     RESULTS: any;
     request: (...args: any[]) => Promise<any>;
     requestMultiple: (...args: any[]) => Promise<any>;
+    openSettings: (...args: any) => Promise<any>;
 };
 type XM_PermissionStatus = "unavailable" | "blocked" | "denied" | "granted" | "limited" | "ignored_permission";
 export declare enum PermissionCode {
@@ -33,6 +34,7 @@ export declare const usePermission: <T extends I_PermissionBasicModule, F extend
         status: any;
     })[]>;
     updatePermissionsInfoMap: (permissionsInfo: Record<PermissionCode, any>) => void;
+    openSettings: (...args: any) => Promise<any>;
 };
 declare class RequestPermissionStatusManager {
     private __status__;
