@@ -31,3 +31,4 @@ __exportStar(require("./risk-data"), exports);
 __exportStar(require("./route-name"), exports);
 __exportStar(require("./styles"), exports);
 __exportStar(require("./to"), exports);
+__exportStar(require("./device-info"), exports);

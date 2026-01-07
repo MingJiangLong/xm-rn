@@ -15,3 +15,4 @@ export * from './risk-data';
 export * from './route-name';
 export * from './styles';
 export * from './to';
+export * from './device-info';
