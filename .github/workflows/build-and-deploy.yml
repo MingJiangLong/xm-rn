@@ -26,11 +26,13 @@ jobs:
         run: npx tsc  
         env:
             CI: true
-
-      - name: 发布
-        uses: JamesIves/github-pages-deploy-action@3.7.1
+      - name: Prepare artifacts
+        run: |
+          mkdir output
+          cp -R dist/* output/  # 假设打包产物在 dist 目录下
+      
+      - name: 移动dist到新分支
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: xm-rn-deploy
-          FOLDER: dist # The folder the action should deploy.
-          CLEAN: true # Automatically remove deleted files from the deploy branch
+          publish_dir: ./output  # 设置要推送的目录
+          publish_branch: xm-rn-deploy  # 指定目标分支（可根据需要修改）
