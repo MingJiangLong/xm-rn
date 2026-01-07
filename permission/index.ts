@@ -83,26 +83,32 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
     }
 
     const requestFirebaseMessagingPermission = async (): Promise<XM_PermissionStatus> => {
-        if (Platform.OS === "ios") {
-            const app = firebaseModule.getApp();
-            const messaging = firebaseModule.getMessaging(app)
-            const authStatus = await firebaseModule.requestPermission(messaging);
-            if (authStatus === 1 ||
-                authStatus === 2) {
-                return RESULTS.GRANTED
+        try {
+            if (Platform.OS === "ios") {
+                const app = firebaseModule.getApp();
+                const messaging = firebaseModule.getMessaging(app)
+                const authStatus = await firebaseModule.requestPermission(messaging);
+                if (authStatus === 1 ||
+                    authStatus === 2) {
+                    return RESULTS.GRANTED
+                }
+                return RESULTS.DENIED;
             }
-            return RESULTS.DENIED;
+
+            if (Platform.OS === "android" && Platform.Version >= 33) {
+                const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+                return result != RESULTS.GRANTED ? RESULTS.DENIED : RESULTS.GRANTED;
+            }
+
+            if (Platform.OS === "android") {
+                return Promise.resolve(RESULTS.GRANTED)
+            }
+            return Promise.resolve(RESULTS.UNAVAILABLE)
+        } catch (error) {
+            console.error(error);
+            return Promise.resolve(RESULTS.UNAVAILABLE)
         }
 
-        if (Platform.OS === "android" && Platform.Version >= 33) {
-            const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-            return result != RESULTS.GRANTED ? RESULTS.DENIED : RESULTS.GRANTED;
-        }
-
-        if (Platform.OS === "android") {
-            return Promise.resolve(RESULTS.GRANTED)
-        }
-        return Promise.resolve(RESULTS.UNAVAILABLE)
     }
 
     const requestPermission = async (permissionCode: PermissionCode): Promise<XM_PermissionStatus> => {
@@ -138,25 +144,15 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
 
 
             const requestResultMap = await requestMultiple(multiplePermissionStr as any[]);
-            let firebaseResult: XM_PermissionStatus = "denied";
+            let firebaseResult: XM_PermissionStatus;
             if (permissions.includes(PermissionCode.FirebaseMessaging)) {
-                try {
-                    firebaseResult = await requestFirebaseMessagingPermission();
-                } catch (error) {
-                    console.error(error);
-                }
+                firebaseResult = await requestFirebaseMessagingPermission();
             }
 
 
             return permissions.reduce((pre, permission) => {
                 const permissionStr = PermissionsInfo[permission]
-                if (permissionStr == undefined) return [
-                    ...pre,
-                    {
-                        serviceCode: permission,
-                        status: IGNORED_PERMISSION as XM_PermissionStatus
-                    }
-                ]
+
                 if (permission == PermissionCode.FirebaseMessaging) {
                     return [
                         ...pre,
@@ -166,6 +162,14 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
                         }
                     ]
                 }
+                if (permissionStr == undefined) return [
+                    ...pre,
+                    {
+                        serviceCode: permission,
+                        status: IGNORED_PERMISSION as XM_PermissionStatus
+                    }
+                ]
+
 
                 const requestResultStatus = requestResultMap[permissionStr]
                 // if (permission == PermissionCode.Contact) {

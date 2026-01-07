@@ -77,24 +77,30 @@ const usePermission = (permissionModule, firebaseModule) => {
         [PermissionCode.Wifi]: undefined,
     };
     const requestFirebaseMessagingPermission = () => __awaiter(void 0, void 0, void 0, function* () {
-        if (react_native_1.Platform.OS === "ios") {
-            const app = firebaseModule.getApp();
-            const messaging = firebaseModule.getMessaging(app);
-            const authStatus = yield firebaseModule.requestPermission(messaging);
-            if (authStatus === 1 ||
-                authStatus === 2) {
-                return RESULTS.GRANTED;
+        try {
+            if (react_native_1.Platform.OS === "ios") {
+                const app = firebaseModule.getApp();
+                const messaging = firebaseModule.getMessaging(app);
+                const authStatus = yield firebaseModule.requestPermission(messaging);
+                if (authStatus === 1 ||
+                    authStatus === 2) {
+                    return RESULTS.GRANTED;
+                }
+                return RESULTS.DENIED;
             }
-            return RESULTS.DENIED;
+            if (react_native_1.Platform.OS === "android" && react_native_1.Platform.Version >= 33) {
+                const result = yield react_native_1.PermissionsAndroid.request(react_native_1.PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+                return result != RESULTS.GRANTED ? RESULTS.DENIED : RESULTS.GRANTED;
+            }
+            if (react_native_1.Platform.OS === "android") {
+                return Promise.resolve(RESULTS.GRANTED);
+            }
+            return Promise.resolve(RESULTS.UNAVAILABLE);
         }
-        if (react_native_1.Platform.OS === "android" && react_native_1.Platform.Version >= 33) {
-            const result = yield react_native_1.PermissionsAndroid.request(react_native_1.PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-            return result != RESULTS.GRANTED ? RESULTS.DENIED : RESULTS.GRANTED;
+        catch (error) {
+            console.error(error);
+            return Promise.resolve(RESULTS.UNAVAILABLE);
         }
-        if (react_native_1.Platform.OS === "android") {
-            return Promise.resolve(RESULTS.GRANTED);
-        }
-        return Promise.resolve(RESULTS.UNAVAILABLE);
     });
     const requestPermission = (permissionCode) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -123,25 +129,12 @@ const usePermission = (permissionModule, firebaseModule) => {
                 .filter(permission => permission != PermissionCode.FirebaseMessaging)
                 .map(permissionCode => PermissionsInfo[permissionCode]).filter(Boolean);
             const requestResultMap = yield requestMultiple(multiplePermissionStr);
-            let firebaseResult = "denied";
+            let firebaseResult;
             if (permissions.includes(PermissionCode.FirebaseMessaging)) {
-                try {
-                    firebaseResult = yield requestFirebaseMessagingPermission();
-                }
-                catch (error) {
-                    console.error(error);
-                }
+                firebaseResult = yield requestFirebaseMessagingPermission();
             }
             return permissions.reduce((pre, permission) => {
                 const permissionStr = PermissionsInfo[permission];
-                if (permissionStr == undefined)
-                    return [
-                        ...pre,
-                        {
-                            serviceCode: permission,
-                            status: IGNORED_PERMISSION
-                        }
-                    ];
                 if (permission == PermissionCode.FirebaseMessaging) {
                     return [
                         ...pre,
@@ -151,6 +144,14 @@ const usePermission = (permissionModule, firebaseModule) => {
                         }
                     ];
                 }
+                if (permissionStr == undefined)
+                    return [
+                        ...pre,
+                        {
+                            serviceCode: permission,
+                            status: IGNORED_PERMISSION
+                        }
+                    ];
                 const requestResultStatus = requestResultMap[permissionStr];
                 // if (permission == PermissionCode.Contact) {
                 //     return [
