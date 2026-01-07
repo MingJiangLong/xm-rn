@@ -22,7 +22,7 @@ type I_DeviceBasicModule = {
     check: () => Promise<boolean>
 }
 
-const useDeviceModule = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
+export const useDeviceModule = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
 
 
     const fetchIpAddress = addTimeout(
