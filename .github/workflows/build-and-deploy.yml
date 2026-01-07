@@ -34,5 +34,6 @@ jobs:
       - name: 移动dist到新分支
         uses: peaceiris/actions-gh-pages@v3
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./output  # 设置要推送的目录
           publish_branch: xm-rn-deploy  # 指定目标分支（可根据需要修改）
