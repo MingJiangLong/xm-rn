@@ -27,8 +27,8 @@ const useAppReview = (appReview) => {
             throw new Error("not supported app review");
     }));
     const reviewWhenIos = (fetchSupermarketStr) => __awaiter(void 0, void 0, void 0, function* () {
-        const [error1, url] = yield fetchSupermarketStr();
-        if (error1) {
+        const [error1, url] = yield (0, to_1.to)(fetchSupermarketStr)();
+        if (error1 || !url) {
             console.error(`[app-review] 获取市场连接失败`, error1);
             return;
         }
@@ -42,8 +42,8 @@ const useAppReview = (appReview) => {
         const [error,] = yield openMarketSchema();
         if (!error)
             return;
-        const [error1, url] = yield fetchSupermarketStr();
-        if (error1)
+        const [error1, url] = yield (0, to_1.to)(fetchSupermarketStr)();
+        if (error1 || !url)
             return;
         yield openMarketUrl(url);
     });

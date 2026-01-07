@@ -23,8 +23,8 @@ export const useAppReview = <T extends I_AppReviewModule>(appReview: T) => {
         }
     )
     const reviewWhenIos = async (fetchSupermarketStr: () => Promise<string>) => {
-        const [error1, url] = await fetchSupermarketStr();
-        if (error1) {
+        const [error1, url] = await to(fetchSupermarketStr)();
+        if (error1 || !url) {
             console.error(`[app-review] 获取市场连接失败`, error1);
             return
         };
@@ -36,8 +36,8 @@ export const useAppReview = <T extends I_AppReviewModule>(appReview: T) => {
     const reviewWhenAndroid = async (fetchSupermarketStr: () => Promise<string>) => {
         const [error,] = await openMarketSchema()
         if (!error) return;
-        const [error1, url] = await fetchSupermarketStr();
-        if (error1) return;
+        const [error1, url] = await to(fetchSupermarketStr)();
+        if (error1 || !url) return;
         await openMarketUrl(url)
     }
 
