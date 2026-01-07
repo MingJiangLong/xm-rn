@@ -29,13 +29,7 @@ export declare const usePermission: <T extends I_PermissionBasicModule, F extend
         serviceCode: PermissionCode;
         status: XM_PermissionStatus;
     } | {
-        serviceCode: PermissionCode.Contact;
-        status: any;
-    })[] | ({
-        serviceCode: PermissionCode;
-        status: XM_PermissionStatus;
-    } | {
-        serviceCode: PermissionCode.Camera | PermissionCode.Application | PermissionCode.SMS | PermissionCode.Location | PermissionCode.PhoneState | PermissionCode.CallLog | PermissionCode.Calendar | PermissionCode.Microphone | PermissionCode.UserTracking | PermissionCode.Photo | PermissionCode.Finger | PermissionCode.PersonalInfo | PermissionCode.Wifi;
+        serviceCode: PermissionCode.Camera | PermissionCode.Application | PermissionCode.Contact | PermissionCode.SMS | PermissionCode.Location | PermissionCode.PhoneState | PermissionCode.CallLog | PermissionCode.Calendar | PermissionCode.Microphone | PermissionCode.UserTracking | PermissionCode.Photo | PermissionCode.Finger | PermissionCode.PersonalInfo | PermissionCode.Wifi;
         status: any;
     })[]>;
     updatePermissionsInfoMap: (permissionsInfo: Record<PermissionCode, any>) => void;

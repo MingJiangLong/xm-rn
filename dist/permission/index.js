@@ -122,11 +122,16 @@ const usePermission = (permissionModule, firebaseModule) => {
             const multiplePermissionStr = permissions
                 .filter(permission => permission != PermissionCode.FirebaseMessaging)
                 .map(permissionCode => PermissionsInfo[permissionCode]).filter(Boolean);
-            let firebaseResult;
-            if (permissions.includes(PermissionCode.FirebaseMessaging)) {
-                firebaseResult = yield requestFirebaseMessagingPermission();
-            }
             const requestResultMap = yield requestMultiple(multiplePermissionStr);
+            let firebaseResult = "denied";
+            if (permissions.includes(PermissionCode.FirebaseMessaging)) {
+                try {
+                    firebaseResult = yield requestFirebaseMessagingPermission();
+                }
+                catch (error) {
+                    console.error(error);
+                }
+            }
             return permissions.reduce((pre, permission) => {
                 const permissionStr = PermissionsInfo[permission];
                 if (permissionStr == undefined)
@@ -147,15 +152,15 @@ const usePermission = (permissionModule, firebaseModule) => {
                     ];
                 }
                 const requestResultStatus = requestResultMap[permissionStr];
-                if (permission == PermissionCode.Contact) {
-                    return [
-                        ...pre,
-                        {
-                            serviceCode: permission,
-                            status: (requestResultStatus == RESULTS.GRANTED || requestResultStatus == RESULTS.LIMITED) ? RESULTS.GRANTED : requestResultStatus
-                        }
-                    ];
-                }
+                // if (permission == PermissionCode.Contact) {
+                //     return [
+                //         ...pre,
+                //         {
+                //             serviceCode: permission,
+                //             status: (requestResultStatus == RESULTS.GRANTED || requestResultStatus == RESULTS.LIMITED) ? RESULTS.GRANTED : requestResultStatus
+                //         }
+                //     ]
+                // }
                 return [...pre, {
                         serviceCode: permission,
                         status: requestResultStatus

@@ -137,12 +137,15 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
                 .map(permissionCode => PermissionsInfo[permissionCode]).filter(Boolean);
 
 
-            let firebaseResult: XM_PermissionStatus;
-
-            if (permissions.includes(PermissionCode.FirebaseMessaging)) {
-                firebaseResult = await requestFirebaseMessagingPermission();
-            }
             const requestResultMap = await requestMultiple(multiplePermissionStr as any[]);
+            let firebaseResult: XM_PermissionStatus = "denied";
+            if (permissions.includes(PermissionCode.FirebaseMessaging)) {
+                try {
+                    firebaseResult = await requestFirebaseMessagingPermission();
+                } catch (error) {
+                    console.error(error);
+                }
+            }
 
 
             return permissions.reduce((pre, permission) => {
@@ -165,15 +168,15 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
                 }
 
                 const requestResultStatus = requestResultMap[permissionStr]
-                if (permission == PermissionCode.Contact) {
-                    return [
-                        ...pre,
-                        {
-                            serviceCode: permission,
-                            status: (requestResultStatus == RESULTS.GRANTED || requestResultStatus == RESULTS.LIMITED) ? RESULTS.GRANTED : requestResultStatus
-                        }
-                    ]
-                }
+                // if (permission == PermissionCode.Contact) {
+                //     return [
+                //         ...pre,
+                //         {
+                //             serviceCode: permission,
+                //             status: (requestResultStatus == RESULTS.GRANTED || requestResultStatus == RESULTS.LIMITED) ? RESULTS.GRANTED : requestResultStatus
+                //         }
+                //     ]
+                // }
                 return [...pre, {
                     serviceCode: permission,
                     status: requestResultStatus
