@@ -15,12 +15,12 @@ export interface I_BasicFirebase {
 
     getAnalytics(...args: any[]): any
     requestPermission(...args: any[]): Promise<any>
-    
+
 }
 
 
 
-const useFirebase = <T extends I_BasicFirebase>(module: T) => {
+export const useFirebase = <T extends I_BasicFirebase>(module: T) => {
 
 
     const {

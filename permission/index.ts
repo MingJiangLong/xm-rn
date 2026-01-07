@@ -30,7 +30,7 @@ export enum PermissionCode {
     Wifi = "11",
 }
 
-const usePermission = <T extends I_PermissionBasicModule, F extends I_BasicFirebase>(
+export const usePermission = <T extends I_PermissionBasicModule, F extends I_BasicFirebase>(
     permissionModule: T, firebaseModule: F
 ) => {
 
