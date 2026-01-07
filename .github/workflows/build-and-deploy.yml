@@ -26,14 +26,15 @@ jobs:
         run: npx tsc  
         env:
             CI: true
-      - name: Prepare artifacts
+      - name: Deploy to xm-rn-deploy
         run: |
-          mkdir output
-          cp -R dist/* output/  # 假设打包产物在 dist 目录下
-      
-      - name: 移动dist到新分支
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./output  # 设置要推送的目录
-          publish_branch: xm-rn-deploy  # 指定目标分支（可根据需要修改）
+          cd dist  
+          git init
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git checkout -b xm-rn-deploy  # 创建或切换到新分支
+          git add .
+          git commit -m "Deploy build artifacts"
+          git push origin HEAD:xm-rn-deploy --force  # 强制推送到新分支
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
