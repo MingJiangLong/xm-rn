@@ -19,8 +19,6 @@ const EVENT_1970_NAME = "calender_device_id";
 const START_OF_1970 = (0, dayjs_1.default)("1970-01-01").startOf("D").toISOString();
 const END_OF_1970 = (0, dayjs_1.default)("1970-01-01").endOf("D").toISOString();
 const useCalendar = (Calendar) => {
-    if (!Calendar)
-        return;
     /**
     * 判断1970是否存在特殊事件
     * @returns

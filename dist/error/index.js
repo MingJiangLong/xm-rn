@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FeError = exports.FormFieldError = exports.NotAuthenticatedError = exports.TimeoutError = exports.ErrorCode = void 0;
+exports.FeError = exports.DependencyMissingError = exports.FormFieldError = exports.NotAuthenticatedError = exports.TimeoutError = exports.ErrorCode = void 0;
 exports.ErrorCode = {
     TIMEOUT_ERROR: "TIMEOUT_ERROR",
     NOT_AUTHENTICATED_ERROR: "NOT_AUTHENTICATED_ERROR",
     FORM_FIELD_ERROR: "FORM_FIELD_ERROR",
+    DEPENDENCY_MISSING_ERROR: "DEPENDENCY_MISSING_ERROR",
 };
 class BasicError extends Error {
     constructor(code, message) {
@@ -36,8 +37,15 @@ class FormFieldError extends BasicError {
     }
 }
 exports.FormFieldError = FormFieldError;
+class DependencyMissingError extends BasicError {
+    constructor(message) {
+        super(exports.ErrorCode.DEPENDENCY_MISSING_ERROR, message);
+    }
+}
+exports.DependencyMissingError = DependencyMissingError;
 exports.FeError = {
     FormFieldError,
     TimeoutError,
-    NotAuthenticatedError
+    NotAuthenticatedError,
+    DependencyMissingError
 };

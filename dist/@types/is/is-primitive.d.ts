@@ -1,0 +1,10 @@
+export type I_PrimitiveValue = string | number | boolean | symbol | undefined | null | BigInt;
+export declare function isPrimitive<T = I_PrimitiveValue>(value: any): value is T;
+export declare function isString(value: unknown): value is string;
+export declare function isNumber(value: unknown): value is number;
+export declare function isBoolean(value: unknown): value is boolean;
+export declare function isSymbol(value: unknown): value is symbol;
+export declare function isUndefined(value: unknown): value is undefined;
+export declare function isNull(value: unknown): value is null;
+export declare function isBigInt(value: unknown): value is BigInt;
+export declare function isNullish(value: unknown): value is null | undefined;

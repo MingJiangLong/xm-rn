@@ -3,6 +3,7 @@ export const ErrorCode = {
     TIMEOUT_ERROR: "TIMEOUT_ERROR",
     NOT_AUTHENTICATED_ERROR: "NOT_AUTHENTICATED_ERROR",
     FORM_FIELD_ERROR: "FORM_FIELD_ERROR",
+    DEPENDENCY_MISSING_ERROR: "DEPENDENCY_MISSING_ERROR",
 }
 
 class BasicError extends Error {
@@ -39,9 +40,16 @@ export class FormFieldError extends BasicError {
     }
 }
 
+export class DependencyMissingError extends BasicError {
+    constructor(message?: string) {
+        super(ErrorCode.DEPENDENCY_MISSING_ERROR, message)
+    }
+}
+
 export const FeError = {
     FormFieldError,
     TimeoutError,
-    NotAuthenticatedError
+    NotAuthenticatedError,
+    DependencyMissingError
 }
 

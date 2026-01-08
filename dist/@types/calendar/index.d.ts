@@ -15,5 +15,5 @@ export declare const useCalendar: <T extends I_BasicCalendar>(Calendar: T) => {
         reminderTitle: string;
         reminderHour: string;
     }, appName: string) => Promise<any>;
-} | undefined;
+};
 export {};

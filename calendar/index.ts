@@ -14,8 +14,6 @@ interface I_BasicCalendar {
 
 export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
 
-    if (!Calendar) return;
-
     /**
     * 判断1970是否存在特殊事件
     * @returns 

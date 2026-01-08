@@ -12,11 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.useAppReview = void 0;
 const react_native_1 = require("react-native");
 const to_1 = require("../to");
+const log_1 = require("../terminal-log/log");
+const terminal = new log_1.TerminalLog("[app-review] ");
 const useAppReview = (appReview) => {
     const openMarketUrl = (0, to_1.to)((url) => __awaiter(void 0, void 0, void 0, function* () {
         const urlStr = `${url !== null && url !== void 0 ? url : ""}`;
-        if (urlStr.length == 0)
-            throw new Error("url is empty");
         yield react_native_1.Linking.openURL(urlStr);
     }));
     const openMarketSchema = (0, to_1.to)(() => __awaiter(void 0, void 0, void 0, function* () {
@@ -27,25 +27,24 @@ const useAppReview = (appReview) => {
             throw new Error("not supported app review");
     }));
     const reviewWhenIos = (fetchSupermarketStr) => __awaiter(void 0, void 0, void 0, function* () {
-        const [error1, url] = yield (0, to_1.to)(fetchSupermarketStr)();
-        if (error1 || !url) {
-            console.error(`[app-review] 获取市场连接失败`, error1);
-            return;
+        const [error, url] = yield (0, to_1.to)(fetchSupermarketStr)();
+        if (!!url) {
+            return yield openMarketUrl(url);
         }
-        ;
-        const [error,] = yield openMarketUrl(url);
-        if (!error)
-            return;
-        yield openMarketSchema();
+        terminal.info("获取市场连接失败,切换为打开应用市场", error);
+        const [error1] = yield openMarketSchema();
+        terminal.error("打开应用市场失败", error1);
     });
     const reviewWhenAndroid = (fetchSupermarketStr) => __awaiter(void 0, void 0, void 0, function* () {
         const [error,] = yield openMarketSchema();
         if (!error)
             return;
-        const [error1, url] = yield (0, to_1.to)(fetchSupermarketStr)();
-        if (error1 || !url)
-            return;
-        yield openMarketUrl(url);
+        terminal.info("打开应用市场失败,切换为打开市场连接", error);
+        const [error2, url] = yield (0, to_1.to)(fetchSupermarketStr)();
+        if (!url || error2) {
+            return terminal.info("获取市场连接失败", error);
+        }
+        return yield openMarketUrl(url);
     });
     const openAppMarket = () => __awaiter(void 0, void 0, void 0, function* () {
         const callback = react_native_1.Platform.select({
