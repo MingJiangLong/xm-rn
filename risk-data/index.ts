@@ -35,8 +35,8 @@ export const createRiskBuilder = <T extends I_SDK>(
 
     } = sdk
     return async (codes: PermissionCode[]) => {
-        let out: I_RiskInfo[] = [];
-        for (let code of codes) {
+        const out: I_RiskInfo[] = [];
+        for (const code of codes) {
             let temp: I_RiskInfo = {
                 uploadType: (code as PermissionCode)
             }
@@ -44,7 +44,7 @@ export const createRiskBuilder = <T extends I_SDK>(
 
                 if (code == PermissionCode.Application) {
                     if (!getApkListInfo) {
-                        console.error(`[${Platform.OS}风控数据]: 缺少应用列表构建函数`);
+                        console.error(`[风控数据${Platform.OS}] 缺少应用列表构建函数getApkListInfo`);
                         continue;
                     }
                     const str = await getApkListInfo();
@@ -53,7 +53,7 @@ export const createRiskBuilder = <T extends I_SDK>(
 
                 if (code == PermissionCode.Contact) {
                     if (!getContactInfo) {
-                        console.error(`[${Platform.OS}风控数据]: 缺少联系人构建函数`);
+                        console.error(`[风控数据${Platform.OS}] 缺少联系人构建函数getContactInfo`);
                         continue;
                     }
                     const str = await getContactInfo();
@@ -62,7 +62,7 @@ export const createRiskBuilder = <T extends I_SDK>(
 
                 if (code == PermissionCode.SMS) {
                     if (!getSMSInfo) {
-                        console.error(`[${Platform.OS}风控数据]: 缺少短信构建函数`);
+                        console.error(`[风控数据${Platform.OS}] 缺少短信构建函数getSMSInfo`);
                         continue;
                     }
                     const str = await getSMSInfo();
@@ -71,7 +71,7 @@ export const createRiskBuilder = <T extends I_SDK>(
 
                 if (code == PermissionCode.PhoneState) {
                     if (!getPhoneState) {
-                        console.error(`[${Platform.OS}风控数据]: 缺少设备信息构建函数`);
+                        console.error(`[风控数据${Platform.OS}] 缺少设备信息构建函数getPhoneState`);
                         continue;
                     }
                     const str = await getPhoneState();
@@ -80,7 +80,7 @@ export const createRiskBuilder = <T extends I_SDK>(
 
                 if (code == PermissionCode.CallLog) {
                     if (!getCallLog) {
-                        console.error(`[${Platform.OS}风控数据]: 缺少通话记录构建函数`);
+                        console.error(`[风控数据${Platform.OS}] 缺少通话记录构建函数getCallLog`);
                         continue;
                     }
                     const str = await getCallLog();
@@ -89,7 +89,7 @@ export const createRiskBuilder = <T extends I_SDK>(
 
                 if (code == PermissionCode.Location) {
                     if (!getLocationInfo) {
-                        console.error(`[${Platform.OS}风控数据]: 缺少定位信息构建函数`);
+                        console.error(`[风控数据${Platform.OS}] 缺少定位信息构建函数getLocationInfo`);
                         continue;
                     }
 
@@ -99,7 +99,7 @@ export const createRiskBuilder = <T extends I_SDK>(
 
                 if (code == PermissionCode.Calendar) {
                     if (!getCalendarInfo) {
-                        console.error(`[${Platform.OS}风控数据]: 缺少日历信息构建函数`);
+                        console.error(`[风控数据${Platform.OS}] 缺少日历信息构建函数getCalendarInfo`);
                         continue;
                     }
                     const str = await getCalendarInfo(appName, getUUID());
@@ -109,11 +109,11 @@ export const createRiskBuilder = <T extends I_SDK>(
                 if (temp.jsonPayload == JSON.stringify([]) || temp.jsonPayload == JSON.stringify({})) {
                     temp.isUploaded = NO_DATA
                 }
+                out.push(temp)
             } catch (error) {
-                console.error(`[风控数据]:`, error);
+                console.error(`[风控数据${Platform.OS}] `, error);
                 continue;
             }
-
         }
 
         return out
