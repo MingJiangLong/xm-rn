@@ -24,7 +24,7 @@ export declare enum PermissionCode {
     PersonalInfo = "9",
     Wifi = "11"
 }
-export declare const usePermission: <T extends I_PermissionBasicModule, F extends I_BasicFirebase>(permissionModule: T, firebaseModule: F) => {
+export declare const usePermission: <T extends I_PermissionBasicModule, F extends I_BasicFirebase>(permissionModule: T, firebaseModule?: F) => {
     requestPermission: (permissionCode: PermissionCode) => Promise<XM_PermissionStatus>;
     requestMultiplePermissions: (permissions: PermissionCode[]) => Promise<({
         serviceCode: PermissionCode;

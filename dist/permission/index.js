@@ -77,6 +77,10 @@ const usePermission = (permissionModule, firebaseModule) => {
         [PermissionCode.Wifi]: undefined,
     };
     const requestFirebaseMessagingPermission = () => __awaiter(void 0, void 0, void 0, function* () {
+        if (!firebaseModule) {
+            console.error("[usePermission] 未注入firebase相关模块");
+            return Promise.resolve(RESULTS.UNAVAILABLE);
+        }
         try {
             if (react_native_1.Platform.OS === "ios") {
                 const app = firebaseModule.getApp();
@@ -153,15 +157,6 @@ const usePermission = (permissionModule, firebaseModule) => {
                         }
                     ];
                 const requestResultStatus = requestResultMap[permissionStr];
-                // if (permission == PermissionCode.Contact) {
-                //     return [
-                //         ...pre,
-                //         {
-                //             serviceCode: permission,
-                //             status: (requestResultStatus == RESULTS.GRANTED || requestResultStatus == RESULTS.LIMITED) ? RESULTS.GRANTED : requestResultStatus
-                //         }
-                //     ]
-                // }
                 return [...pre, {
                         serviceCode: permission,
                         status: requestResultStatus

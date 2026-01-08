@@ -32,7 +32,7 @@ export enum PermissionCode {
 }
 
 export const usePermission = <T extends I_PermissionBasicModule, F extends I_BasicFirebase>(
-    permissionModule: T, firebaseModule: F
+    permissionModule: T, firebaseModule?: F
 ) => {
 
 
@@ -84,6 +84,10 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
     }
 
     const requestFirebaseMessagingPermission = async (): Promise<XM_PermissionStatus> => {
+        if (!firebaseModule) {
+            console.error("[usePermission] 未注入firebase相关模块");
+            return Promise.resolve(RESULTS.UNAVAILABLE)
+        }
         try {
             if (Platform.OS === "ios") {
                 const app = firebaseModule.getApp();
@@ -173,15 +177,6 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
 
 
                 const requestResultStatus = requestResultMap[permissionStr]
-                // if (permission == PermissionCode.Contact) {
-                //     return [
-                //         ...pre,
-                //         {
-                //             serviceCode: permission,
-                //             status: (requestResultStatus == RESULTS.GRANTED || requestResultStatus == RESULTS.LIMITED) ? RESULTS.GRANTED : requestResultStatus
-                //         }
-                //     ]
-                // }
                 return [...pre, {
                     serviceCode: permission,
                     status: requestResultStatus
