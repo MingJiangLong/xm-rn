@@ -1,4 +1,4 @@
-export default function useKeyboard(): {
+export declare function useKeyboard(): {
     isKeyboardVisible: boolean;
     keyboardHeight: number;
 };

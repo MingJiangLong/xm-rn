@@ -3,18 +3,30 @@
   "version": "1.0.0",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@babel/runtime": "^7.28.4",
+    "@rollup/plugin-babel": "^6.1.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.3.0",
     "@types/crypto-js": "^4.2.2",
     "@types/react": "^19.2.7",
     "dayjs": "^1.11.19",
     "react": "^19.2.3",
     "react-native": "^0.83.1",
+    "rollup": "^4.55.1",
+    "tslib": "^2.8.1",
     "typescript": "latest"
   },
   "dependencies": {
