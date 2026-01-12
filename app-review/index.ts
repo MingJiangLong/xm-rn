@@ -27,7 +27,7 @@ export const useAppReview = <T extends I_AppReviewModule>(appReview: T) => {
     )
     const reviewWhenIos = async (fetchSupermarketStr: () => Promise<string>) => {
         const [error, url] = await to(fetchSupermarketStr)();
-        if (!!url) {
+        if (!!url?.length) {
             return await openMarketUrl(url);
         }
         terminal.info("获取市场连接失败,切换为打开应用市场", error)
