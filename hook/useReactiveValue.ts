@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { isShallowEqual } from "../shallow-equal";
 
 
 type I_ReactiveObject<T = any> = {
@@ -25,9 +26,8 @@ export function useReactiveValue<T>(target: T) {
                 },
                 set(obj, prop, value) {
                     const oldValue = Reflect.get(obj, prop);
-                    if (oldValue === value) return true
+                    if (isShallowEqual(oldValue, value)) return true
                     const success = Reflect.set(obj, prop, value);
-                    // !如果值没变也更新了
                     if (success) setState((prevState) => ({ value: prevState.value }));;
                     return true;
                 }
