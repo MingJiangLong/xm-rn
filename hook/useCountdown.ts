@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 
-enum CountdownStatus {
+export enum CountdownStatus {
     "idle" = 0,
     "running" = 1,
     "done" = 2,
