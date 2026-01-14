@@ -5,7 +5,7 @@ interface I_BasicModule {
 }
 
 
-const useAppsFlyer = <T extends I_BasicModule>(module: T) => {
+export const useAppsFlyer = <T extends I_BasicModule>(module: T) => {
 
     const initSdk = (options: Parameters<T["initSdk"]>[0]) => {
         return module.initSdk({
