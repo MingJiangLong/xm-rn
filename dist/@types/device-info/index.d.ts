@@ -34,5 +34,6 @@ export declare const useDeviceInfo: <T extends I_DeviceBasicModule>(DeviceInfo: 
         androidVersion: string;
         appType: string;
     }>;
+    fetchIpAddress: (url?: any) => Promise<Promise<string>>;
 };
 export {};
