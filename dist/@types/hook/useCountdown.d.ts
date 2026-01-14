@@ -1,4 +1,4 @@
-declare enum CountdownStatus {
+export declare enum CountdownStatus {
     "idle" = 0,
     "running" = 1,
     "done" = 2,
