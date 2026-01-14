@@ -26,9 +26,9 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
 
 
     const fetchIpAddress = addTimeout(
-        async function () {
+        async function (url = "https://icanhazip.com/") {
             try {
-                let resp = await fetch("https://icanhazip.com/")
+                let resp = await fetch(url)
                 return (await resp?.text()).trim();
             } catch (e) {
                 return DeviceInfo.getIpAddress();
@@ -122,7 +122,8 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
     return {
         buildIOSDeviceInfo,
         buildDefaultPostData,
-        buildWebviewEnv
+        buildWebviewEnv,
+        fetchIpAddress
     }
 }
 

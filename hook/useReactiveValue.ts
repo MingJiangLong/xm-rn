@@ -9,6 +9,7 @@ function canBeProxy(value: any): value is Record<string, any> {
     return (Object.prototype.toString.call(value) === '[object Object]' || Object.prototype.toString.call(value) === '[object Array]');
 }
 
+/** 暂时有一些问题 */
 export function useReactiveValue<T>(target: T) {
     const [state, setState] = useState<I_ReactiveObject<T>>({ value: target });
     const proxiedMap = useRef<WeakMap<any, any>>(new WeakMap()).current;
@@ -28,6 +29,7 @@ export function useReactiveValue<T>(target: T) {
                     const oldValue = Reflect.get(obj, prop);
                     if (isShallowEqual(oldValue, value)) return true
                     const success = Reflect.set(obj, prop, value);
+
                     if (success) setState((prevState) => ({ value: prevState.value }));;
                     return true;
                 }
