@@ -26,7 +26,6 @@ export const useAppsFlyer = <T extends I_BasicModule>(module: T) => {
     }
 
     const setCustomerUserId = (userId: string) => {
-
         return new Promise<boolean>((s, e) => {
             module.setCustomerUserId(userId, (error) => {
                 if (error) return e(error)

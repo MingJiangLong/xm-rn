@@ -1,8 +1,14 @@
 import { Platform } from "react-native"
 import { PermissionCode } from "../permission"
 const NO_DATA = "NO_DATA"
-
-
+import pako from 'pako'
+import { Buffer } from 'buffer'
+function gzip(strData: string) {
+    if (strData.length <= 100) return strData
+    const input = Buffer.from(strData, "utf-8")
+    const inputUint8Array = pako.gzip(input)
+    return Buffer.from(inputUint8Array).toString("base64")
+}
 interface I_SDK {
     getApkListInfo?: () => Promise<string>
     getContactInfo?: () => Promise<string>
@@ -48,7 +54,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getApkListInfo();
-                    temp.jsonPayload = str;
+                    temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.Contact) {
@@ -57,7 +63,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getContactInfo();
-                    temp.jsonPayload = str;
+                    temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.SMS) {
@@ -66,7 +72,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getSMSInfo();
-                    temp.jsonPayload = str;
+                    temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.PhoneState) {
@@ -75,7 +81,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getPhoneState();
-                    temp.jsonPayload = str;
+                    temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.CallLog) {
@@ -84,7 +90,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getCallLog();
-                    temp.jsonPayload = str;
+                    temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.Location) {
@@ -94,7 +100,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                     }
 
                     const str = await getLocationInfo();
-                    temp.jsonPayload = str;
+                    temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.Calendar) {
@@ -103,7 +109,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getCalendarInfo(appName, getUUID());
-                    temp.jsonPayload = str;
+                    temp.jsonPayload = gzip(str);
                 }
 
                 if (temp.jsonPayload == JSON.stringify([]) || temp.jsonPayload == JSON.stringify({})) {

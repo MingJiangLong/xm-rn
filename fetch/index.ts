@@ -119,7 +119,8 @@ export async function createPostFactory(
                 {
                     body: JSON.stringify(requestData),
                     headers: requestHeader,
-                    method: "POST"
+                    method: "POST",
+                    timeout
                 }
             )
             const responseDataTemp = await response.text();
