@@ -20,3 +20,4 @@ export * from './hook/useCountdown';
 export * from './hook/useKeyboard';
 export * from './hook/useReactiveValue';
 export * from './apps-flyer';
+export * from "./shallow-equal";

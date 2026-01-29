@@ -1,6 +1,8 @@
-type I_ReactiveObject<T = any> = {
+/**
+ * @param initialValue
+ * @returns 响应式对象
+ */
+export declare function useReactiveValue<T extends object>(initialValue: T): T;
+export declare function useReactive<T>(initialValue: T): {
     value: T;
 };
-/** 暂时有一些问题 */
-export declare function useReactiveValue<T>(target: T): I_ReactiveObject<T>;
-export {};
