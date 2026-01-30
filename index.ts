@@ -18,6 +18,6 @@ export * from './to'
 export * from './device-info'
 export * from './hook/useCountdown'
 export * from './hook/useKeyboard'
-export * from './hook/useReactiveValue'
+export * from './hook/useReactive'
 export * from './apps-flyer'
 export * from "./shallow-equal"
