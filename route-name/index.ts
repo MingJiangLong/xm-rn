@@ -15,3 +15,6 @@ export function createRouteNames<T extends readonly string[]>(routes: T) {
         {} as { [K in T[number]]: K }
     )
 }
+
+
+

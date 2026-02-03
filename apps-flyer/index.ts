@@ -18,7 +18,6 @@ export const useAppsFlyer = <T extends I_BasicModule>(module: T) => {
     const getAppsFlyerUID = () => {
         return new Promise<string>((s, e) => {
             module.getAppsFlyerUID((error: any, uid) => {
-
                 if (error) return e(error)
                 s(uid)
             })
