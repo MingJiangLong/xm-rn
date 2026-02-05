@@ -10,11 +10,15 @@ type I_LocationBasic = {
 export declare const useLocation: <T extends I_LocationBasic>(module: T) => {
     getCurrentPosition: () => Promise<Promise<I_LocationInfo>>;
     getCurrentPositionDetail: () => Promise<Promise<{
-        city: string;
-        state: string;
-        country: string;
-        postcode: string;
+        address?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+        postcode?: string;
         province?: string;
+        man_made?: string;
+        road?: string;
+        "ISO3166-2-lvl4"?: string;
     }>>;
 };
 export {};
