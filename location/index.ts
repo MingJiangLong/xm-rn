@@ -50,14 +50,19 @@ export const useLocation = <T extends I_LocationBasic>(module: T) => {
             const tempData = await res.text()
             const resJson = JSON.parse(tempData)
             return {
+                address: resJson?.dispaly_name,
                 ...resJson?.address,
                 ...location
             } as {
-                city: string
-                state: string
-                country: string
-                postcode: string
+                address?: string
+                city?: string
+                state?: string
+                country?: string
+                postcode?: string
                 province?: string
+                man_made?: string
+                road?: string
+                "ISO3166-2-lvl4"?: string
             }
         }
     )
