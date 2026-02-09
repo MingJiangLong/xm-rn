@@ -1,8 +1,6 @@
 import { PermissionsAndroid, Platform } from "react-native";
 import { I_BasicFirebase } from "../firebase";
 
-
-
 type I_PermissionBasicModule = {
     PERMISSIONS: any
     RESULTS: any
@@ -31,8 +29,9 @@ export enum PermissionCode {
     Wifi = "11",
 }
 
-export const usePermission = <T extends I_PermissionBasicModule, F extends I_BasicFirebase>(
-    permissionModule: T, firebaseModule?: F
+export const usePermission = <T extends I_PermissionBasicModule, F extends I_BasicFirebase & { requestCalendarPermission: (...args: any[]) => Promise<any> }>(
+    permissionModule: T,
+    otherModule?: F
 ) => {
 
 
@@ -84,15 +83,15 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
     }
 
     const requestFirebaseMessagingPermission = async (): Promise<XM_PermissionStatus> => {
-        if (!firebaseModule) {
+        if (!otherModule) {
             console.error("[usePermission] 未注入firebase相关模块");
             return Promise.resolve(RESULTS.UNAVAILABLE)
         }
         try {
             if (Platform.OS === "ios") {
-                const app = firebaseModule.getApp();
-                const messaging = firebaseModule.getMessaging(app)
-                const authStatus = await firebaseModule.requestPermission(messaging);
+                const app = otherModule.getApp();
+                const messaging = otherModule.getMessaging(app)
+                const authStatus = await otherModule.requestPermission(messaging);
                 if (authStatus === 1 ||
                     authStatus === 2) {
                     return RESULTS.GRANTED
@@ -126,6 +125,16 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
                 return requestFirebaseMessagingPermission();
             }
 
+            if (permissionCode == PermissionCode.Calendar) {
+                if (!otherModule) {
+                    console.error("[usePermission] 未注入申请日历权限方法");
+                    return Promise.resolve(RESULTS.UNAVAILABLE)
+                }
+
+                const tempt = await otherModule?.requestCalendarPermission();
+                if (tempt == "authorized" || tempt == "granted") return "granted"
+                return "denied"
+            }
             const result = await request(requestCode);
             if (permissionCode == PermissionCode.Contact) {
                 if (result == RESULTS.GRANTED || result == RESULTS.LIMITED) return RESULTS.GRANTED;

@@ -1,3 +1,4 @@
+import { to } from "../to"
 import { addTimeout } from "../add-timeout"
 import { TimeoutError } from "../error"
 
@@ -42,11 +43,17 @@ export const useLocation = <T extends I_LocationBasic>(module: T) => {
     const fetchLocationDescUrl = function (latitude: number, longitude: number) {
         return `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
     }
-    const getCurrentPositionDetail = addTimeout(
+
+    /** @deprecated 使用原生转换 */
+    const getCurrentPositionDetail = (
         async function () {
             const location = await getCurrentPosition();
-            let url = fetchLocationDescUrl(location.latitude, location.longitude)
-            const res = await fetch(url, { method: "GET" })
+            const [error, res] = await to(addTimeout(fetch))(fetchLocationDescUrl(location.latitude, location.longitude), { method: "GET" })
+            if (error || !res) return {
+                ...location,
+                is_current: true
+            }
+
             const tempData = await res.text()
             const resJson = JSON.parse(tempData)
             return {
