@@ -1,16 +1,5 @@
 import { PermissionsAndroid, Platform } from "react-native";
-import { I_BasicFirebase } from "../firebase";
 
-
-
-type I_PermissionBasicModule = {
-    PERMISSIONS: any
-    RESULTS: any
-    request: (...args: any[]) => Promise<any>
-    requestMultiple: (...args: any[]) => Promise<any>
-    openSettings: (...args: any) => Promise<any>
-}
-const IGNORED_PERMISSION = "ignored_permission"
 type XM_PermissionStatus = "unavailable" | "blocked" | "denied" | "granted" | "limited" | "ignored_permission"
 
 export enum PermissionCode {
@@ -30,108 +19,103 @@ export enum PermissionCode {
     PersonalInfo = "9",
     Wifi = "11",
 }
-
-export const usePermission = <T extends I_PermissionBasicModule, F extends I_BasicFirebase>(
-    permissionModule: T, firebaseModule?: F
+type Result = "unavailable" | "blocked" | "denied" | "granted" | "limited"
+export const usePermission = (
+    interceptor?: (permissionCode: PermissionCode, process: number) => Promise<Result>
 ) => {
 
 
-    const { PERMISSIONS, RESULTS, request, requestMultiple, openSettings } = permissionModule;
-    let PermissionsInfo: Record<PermissionCode, any> = {
-        [PermissionCode.Camera]: Platform.select({
-            android: PERMISSIONS.ANDROID.CAMERA,
-            ios: PERMISSIONS.IOS.CAMERA
-        }),
-        [PermissionCode.Application]: undefined,
-        [PermissionCode.Contact]: Platform.select({
-            android: undefined,
-            ios: PERMISSIONS.IOS.CONTACTS
-        }),
-        [PermissionCode.SMS]: Platform.select({
-            android: PERMISSIONS.ANDROID.READ_SMS,
-            ios: undefined
-        }),
-        [PermissionCode.Location]: Platform.select({
-            android: PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION,
-            ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
-        }),
-        [PermissionCode.PhoneState]: undefined,
-        [PermissionCode.CallLog]: Platform.select({
-            ios: undefined,
-            android: PERMISSIONS.ANDROID.READ_CALL_LOG
-        }),
+    let permissionSdk: any = undefined;
+    let firebaseApp: any = undefined
+    let firebaseMessaging: any = undefined;
+    let calendarSdk: any = undefined
 
-        [PermissionCode.Calendar]: Platform.select({
-            ios: PERMISSIONS.IOS.CALENDARS,
-            android: PERMISSIONS.ANDROID.READ_CALENDAR
-        }),
-        [PermissionCode.Microphone]: Platform.select({
-            android: PERMISSIONS.ANDROID.RECORD_AUDIO,
-            ios: PERMISSIONS.IOS.MICROPHONE
-        }),
-        [PermissionCode.UserTracking]: Platform.select({
-            ios: PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY,
-            android: undefined
-        }),
-        [PermissionCode.Photo]: Platform.select({
-            ios: PERMISSIONS.IOS.PHOTO_LIBRARY,
-            android: undefined
-        }),
-        [PermissionCode.FirebaseMessaging]: undefined,
-        [PermissionCode.Finger]: undefined,
-        [PermissionCode.PersonalInfo]: undefined,
-        [PermissionCode.Wifi]: undefined,
-    }
 
-    const requestFirebaseMessagingPermission = async (): Promise<XM_PermissionStatus> => {
-        if (!firebaseModule) {
-            console.error("[usePermission] 未注入firebase相关模块");
-            return Promise.resolve(RESULTS.UNAVAILABLE)
-        }
+
+    const requestPermission = async (permissionCode: PermissionCode): Promise<Result> => {
         try {
-            if (Platform.OS === "ios") {
-                const app = firebaseModule.getApp();
-                const messaging = firebaseModule.getMessaging(app)
-                const authStatus = await firebaseModule.requestPermission(messaging);
-                if (authStatus === 1 ||
-                    authStatus === 2) {
-                    return RESULTS.GRANTED
-                }
-                return RESULTS.DENIED;
+            if (permissionSdk == undefined) {
+                permissionSdk = require("react-native-permissions")
             }
-
-            if (Platform.OS === "android" && Platform.Version >= 33) {
-                const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-                return result != RESULTS.GRANTED ? RESULTS.DENIED : RESULTS.GRANTED;
-            }
-
-            if (Platform.OS === "android") {
-                return Promise.resolve(RESULTS.GRANTED)
-            }
-            return Promise.resolve(RESULTS.UNAVAILABLE)
-        } catch (error) {
-            console.error(error);
-            return Promise.resolve(RESULTS.UNAVAILABLE)
-        }
-
-    }
-
-    const requestPermission = async (permissionCode: PermissionCode): Promise<XM_PermissionStatus> => {
-        try {
+            if (!permissionSdk) throw new Error("react-native-permissions not found");
+            const { PERMISSIONS, RESULTS, request } = permissionSdk;
             requestPermissionStatusManager.update("requesting")
-            const requestCode = PermissionsInfo[permissionCode];
-
-            if (!requestCode) return IGNORED_PERMISSION;
-            if (permissionCode == PermissionCode.FirebaseMessaging) {
-                return requestFirebaseMessagingPermission();
-            }
-
-            const result = await request(requestCode);
+            // 风控数据相关权限
             if (permissionCode == PermissionCode.Contact) {
-                if (result == RESULTS.GRANTED || result == RESULTS.LIMITED) return RESULTS.GRANTED;
+                if (Platform.OS === "ios") return request(PERMISSIONS.IOS.CONTACTS);
             }
+            if (permissionCode == PermissionCode.SMS) {
+                if (Platform.OS === "android") return request(PERMISSIONS.ANDROID.READ_SMS)
+            }
+            if (permissionCode == PermissionCode.Location) {
+                return request(Platform.select({
+                    android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+                    ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
+                }))
+            }
+            if (permissionCode == PermissionCode.Calendar) {
+                calendarSdk = require("react-native-calendar-events")
+                if (!calendarSdk) throw new Error("react-native-calendar-events not found");
+                const result = await calendarSdk.requestPermissions();
+                if (result != "authorized") return PERMISSIONS.UNAVAILABLE;
+                return PERMISSIONS.GRANTED
+            }
+            // 其它无关紧要权限
+            if (permissionCode == PermissionCode.Microphone) {
+                return request(Platform.select({
+                    android: PERMISSIONS.ANDROID.RECORD_AUDIO,
+                    ios: PERMISSIONS.IOS.MICROPHONE
+                }))
+            }
+            if (permissionCode == PermissionCode.UserTracking) {
+                if (Platform.OS == "ios") {
+                    return request(PERMISSIONS.IOS.APP_TRACKING_TRANSPARENCY)
+                }
+            }
+            if (permissionCode == PermissionCode.Photo) {
+                if (Platform.OS == "ios") {
+                    return request(PERMISSIONS.IOS.PHOTO_LIBRARY)
+                }
+            }
+            if (permissionCode == PermissionCode.FirebaseMessaging) {
+                const requestFirebaseMessagingPermission = async (): Promise<XM_PermissionStatus> => {
+                    if (!firebaseApp) {
+                        firebaseApp = require("@react-native-firebase/app")
+                    }
+                    if (!firebaseApp) throw new Error("@react-native-firebase/app not found");
 
-            return result
+                    if (!firebaseMessaging) {
+                        firebaseMessaging = require("@react-native-firebase/messaging")
+                    }
+                    if (!firebaseMessaging) throw new Error("@react-native-firebase/messaging not found");
+                    try {
+                        if (Platform.OS === "ios") {
+                            const app = firebaseApp.getApp();
+                            const messaging = firebaseMessaging.getMessaging(app)
+                            const authStatus = await firebaseMessaging.requestPermission(messaging);
+                            if (authStatus === 1 ||
+                                authStatus === 2) {
+                                return RESULTS.GRANTED
+                            }
+                            return RESULTS.DENIED;
+                        }
+                        if (Platform.OS === "android" && Platform.Version >= 33) {
+                            const result = await request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+                            return result != RESULTS.GRANTED ? RESULTS.UNAVAILABLE : RESULTS.GRANTED;
+                        }
+                        if (Platform.OS === "android") {
+                            return Promise.resolve(RESULTS.GRANTED)
+                        }
+                        return Promise.resolve(RESULTS.UNAVAILABLE)
+                    } catch (error) {
+                        return Promise.resolve(RESULTS.UNAVAILABLE)
+                    }
+
+                }
+
+                return requestFirebaseMessagingPermission()
+            }
+            return Promise.resolve(RESULTS.GRANTED)
         } finally {
             requestPermissionStatusManager.update("idle")
         }
@@ -139,67 +123,46 @@ export const usePermission = <T extends I_PermissionBasicModule, F extends I_Bas
 
     const requestMultiplePermissions = async (permissions: PermissionCode[]) => {
         try {
+
             requestPermissionStatusManager.update("requesting")
-
-            const multiplePermissionStr = permissions
-                .filter(permission =>
-                    permission != PermissionCode.FirebaseMessaging
-                )
-                .map(permissionCode => PermissionsInfo[permissionCode]).filter(Boolean);
-
-
-            const requestResultMap = await requestMultiple(multiplePermissionStr as any[]);
-            let firebaseResult: XM_PermissionStatus;
-            if (permissions.includes(PermissionCode.FirebaseMessaging)) {
-                firebaseResult = await requestFirebaseMessagingPermission();
-            }
-
-
-            return permissions.reduce((pre, permission) => {
-                const permissionStr = PermissionsInfo[permission]
-
-                if (permission == PermissionCode.FirebaseMessaging) {
-                    return [
-                        ...pre,
-                        {
-                            serviceCode: permission,
-                            status: firebaseResult
-                        }
-                    ]
-                }
-                if (permissionStr == undefined) return [
-                    ...pre,
-                    {
+            let result: Array<{
+                serviceCode: PermissionCode,
+                status: Result
+            }> = []
+            for (let permission of permissions) {
+                try {
+                    const resp = await requestPermission(permission);
+                    result.push({
                         serviceCode: permission,
-                        status: IGNORED_PERMISSION as XM_PermissionStatus
-                    }
-                ]
-
-
-                const requestResultStatus = requestResultMap[permissionStr]
-                return [...pre, {
-                    serviceCode: permission,
-                    status: requestResultStatus
-                }]
-            }, [] as { serviceCode: PermissionCode, status: XM_PermissionStatus }[])
+                        status: resp
+                    })
+                } catch (error) {
+                    result.push({
+                        serviceCode: permission,
+                        status: "unavailable"
+                    })
+                }
+            }
+            return result
         } finally {
             requestPermissionStatusManager.update("idle")
         }
     }
 
-
-
-    const updatePermissionsInfoMap = (permissionsInfo: Record<PermissionCode, any>) => {
-        PermissionsInfo = {
-            ...PermissionsInfo,
-            ...permissionsInfo
+    const openSettings = async (...args: any) => {
+        if (permissionSdk == undefined) {
+            permissionSdk = require("react-native-permissions")
         }
+        if (!permissionSdk) throw new Error("react-native-permissions not found");
+        const { openSettings } = permissionSdk;
+        return openSettings(...args)
     }
+
+
 
     return {
         requestPermission,
         requestMultiplePermissions,
-        updatePermissionsInfoMap,
         openSettings
     }
 
