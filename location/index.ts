@@ -14,7 +14,7 @@ type I_LocationBasic = {
 }
 
 
-export const useLocation = <T extends I_LocationBasic>(sdk: T) => {
+export const useLocation = <T extends I_LocationBasic>(sdk?: T) => {
 
     let module: any = sdk;
 
