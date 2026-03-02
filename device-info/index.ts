@@ -22,21 +22,29 @@ type I_DeviceBasicModule = {
     check: () => Promise<boolean>
 }
 
-export const useDeviceInfo = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
+export const useDeviceInfo = <T extends I_DeviceBasicModule>(sdk?: T) => {
 
+    let DeviceInfo: any = sdk;
 
+    const checkAndInitialSdk = () => {
+        if (!sdk) {
+            sdk = require("react-native-device-info").default
+        }
+        if (!sdk) throw new Error("react-native-device-info not found")
+    }
     const fetchIpAddress = addTimeout(
-        async function (url = "https://icanhazip.com/") {
+        async function (url: string = "https://icanhazip.com/") {
             try {
                 let resp = await fetch(url)
                 return (await resp?.text()).trim();
             } catch (e) {
+                checkAndInitialSdk()
                 return DeviceInfo.getIpAddress();
             }
         }
     )
-    async function buildIOSDeviceInfo() {
-
+    async function buildDeviceInfo() {
+        checkAndInitialSdk()
         const batteryCharging = await DeviceInfo.isBatteryCharging();
         let chargingStatus = 3
         if (batteryCharging) { chargingStatus = 2; }
@@ -59,6 +67,7 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
     }
 
     const buildDefaultPostData = async () => {
+        checkAndInitialSdk()
         const phoneName = Platform.select({
             android: `${DeviceInfo.getBrand()} ${DeviceInfo.getModel()}`,
             ios: await DeviceInfo.getDeviceName()
@@ -87,6 +96,7 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
         return Promise.resolve(temp);
     }
     const buildWebviewEnv = async () => {
+        checkAndInitialSdk()
         const iosName = await DeviceInfo.getDeviceName();
         const androidName = `${DeviceInfo.getBrand()} ${DeviceInfo.getModel()}`
         const phoneName = Platform.select({
@@ -120,7 +130,7 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
         }
     }
     return {
-        buildIOSDeviceInfo,
+        buildDeviceInfo,
         buildDefaultPostData,
         buildWebviewEnv,
         fetchIpAddress

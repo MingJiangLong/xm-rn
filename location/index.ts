@@ -14,9 +14,21 @@ type I_LocationBasic = {
 }
 
 
-export const useLocation = <T extends I_LocationBasic>(module: T) => {
+export const useLocation = <T extends I_LocationBasic>(sdk: T) => {
+
+    let module: any = sdk;
+
+    const checkAndInitialSdk = () => {
+
+        if (!module) {
+            module = require("@react-native-community/geolocation").default;
+        }
+        if (!module) throw new Error("@react-native-community/geolocation not found")
+    }
 
     function getCurrentPosition() {
+
+        checkAndInitialSdk();
         const fetchLocationPromise = new Promise<I_LocationInfo>((s, e) => {
             module.setRNConfiguration({ skipPermissionRequests: true })
             module.getCurrentPosition(
@@ -42,6 +54,10 @@ export const useLocation = <T extends I_LocationBasic>(module: T) => {
     const fetchLocationDescUrl = function (latitude: number, longitude: number) {
         return `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
     }
+
+    /** 
+     * 通过限量网站查询更多的位置信息
+     */
     const getCurrentPositionDetail = addTimeout(
         async function () {
             const location = await getCurrentPosition();
@@ -66,9 +82,6 @@ export const useLocation = <T extends I_LocationBasic>(module: T) => {
         getCurrentPosition,
         getCurrentPositionDetail
     }
-
-
-
 }
 
 

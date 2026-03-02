@@ -13,7 +13,7 @@ import { TimeoutError } from "../error";
  * const result = await fetchWithTimeout();
  * ```
  */
-export function addTimeout<T extends (...args: unknown[]) => Promise<unknown>>(
+export function addTimeout<T extends (...args: any[]) => Promise<any>>(
     input: T,
     timeout = 3000,
     timeoutMessage?: string

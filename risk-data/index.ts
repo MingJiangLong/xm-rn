@@ -54,7 +54,8 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getApkListInfo();
-                    temp.jsonPayload = gzip(str);
+                    // temp.jsonPayload = gzip(str);
+                    temp.jsonPayload = str;
                 }
 
                 if (code == PermissionCode.Contact) {
@@ -63,7 +64,8 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getContactInfo();
-                    temp.jsonPayload = gzip(str);
+                    temp.jsonPayload = str;
+                    // temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.SMS) {
@@ -81,7 +83,8 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getPhoneState();
-                    temp.jsonPayload = gzip(str);
+                    temp.jsonPayload = str;
+                    // temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.CallLog) {
@@ -90,7 +93,8 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getCallLog();
-                    temp.jsonPayload = gzip(str);
+                    // temp.jsonPayload = gzip(str);
+                    temp.jsonPayload = str;
                 }
 
                 if (code == PermissionCode.Location) {
@@ -100,7 +104,8 @@ export const createRiskBuilder = <T extends I_SDK>(
                     }
 
                     const str = await getLocationInfo();
-                    temp.jsonPayload = gzip(str);
+                    temp.jsonPayload = (str);
+                    // temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.Calendar) {
@@ -109,7 +114,8 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getCalendarInfo(appName, getUUID());
-                    temp.jsonPayload = gzip(str);
+                    temp.jsonPayload = (str);
+                    // temp.jsonPayload = gzip(str);
                 }
 
                 if (temp.jsonPayload == JSON.stringify([]) || temp.jsonPayload == JSON.stringify({})) {

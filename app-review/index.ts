@@ -1,17 +1,29 @@
 import { Linking, Platform } from "react-native"
 import { to } from "../to"
-import { TerminalLog } from "../terminal-log/log"
-
-
-
-const terminal = new TerminalLog("[app-review] ")
-interface I_AppReviewModule {
+type Module = {
     isAvailable: () => boolean
-    RequestInAppReview: () => Promise<boolean>
-    fetchMarketUrl: () => Promise<string>
+    RequestInAppReview: () => any
 }
 
-export const useAppReview = <T extends I_AppReviewModule>(appReview: T) => {
+/**
+ * 该模块会自动调用`react-native-app-review`包
+ * 如果需要使用自定包需要主动注入
+ * @param fetchSupermarketStr 
+ * @returns 
+ */
+export const useAppReview = (
+    fetchSupermarketStr: () => Promise<string>,
+    customModule?: Module
+) => {
+
+    let appReviewSdk: any = customModule
+
+    const checkAndInitialSdk = () => {
+        if (appReviewSdk == undefined) {
+            appReviewSdk = require("react-native-app-review").default;
+        }
+        if (!appReviewSdk) throw new Error("react-native-app-review not found");
+    }
     const openMarketUrl = to(
         async (url: string) => {
             const urlStr = `${url ?? ""}`
@@ -20,31 +32,43 @@ export const useAppReview = <T extends I_AppReviewModule>(appReview: T) => {
     )
     const openMarketSchema = to(
         async () => {
-            if (!appReview.isAvailable()) throw new Error("not supported app review")
-            const result = await appReview.RequestInAppReview()
+            checkAndInitialSdk()
+            if (!appReviewSdk.isAvailable()) throw new Error("not supported app review")
+            const result = await appReviewSdk.RequestInAppReview()
             if (result == false) throw new Error("not supported app review")
         }
     )
-    const reviewWhenIos = async (fetchSupermarketStr: () => Promise<string>) => {
-        const [error, url] = await to(fetchSupermarketStr)();
-        if (!!url?.length) {
-            return await openMarketUrl(url);
-        }
-        terminal.info("获取市场连接失败,切换为打开应用市场", error)
 
-        const [error1] = await openMarketSchema();
-        terminal.error("打开应用市场失败", error1)
+
+    const onFetchSupermarketStr = async () => {
+        const [error, url] = await to(fetchSupermarketStr)()
+        if (!url?.length) throw new Error("[app-review]: url is empty");
+        if (!error) return url
+        throw new Error(`[app-review]:获取市场连接失败 ${error}`)
+    }
+    const reviewWhenIos = async () => {
+        const [error, url] = await to(onFetchSupermarketStr)();
+        if (!error) {
+            return await openMarketUrl(url ?? "");
+        } else {
+            console.warn(`[app-review]: 获取市场连接失败,即将打开商店`, error);
+        }
+        const [error2, rest] = await openMarketSchema();
+        if (error2) {
+            console.warn(`[app-review]: 打开商店失败`, error2);
+        }
     }
 
-    const reviewWhenAndroid = async (fetchSupermarketStr: () => Promise<string>) => {
+    const reviewWhenAndroid = async () => {
         const [error,] = await openMarketSchema()
-        if (!error) return;
-        terminal.info("打开应用市场失败,切换为打开市场连接", error)
-        const [error2, url] = await to(fetchSupermarketStr)();
-        if (!url || error2) {
-            return terminal.info("获取市场连接失败", error)
+        if (!error) {
+            console.warn(`[app-review]: 打开商店失败,即将打开链接`, error);
+        };
+        const [error2, url] = await to(onFetchSupermarketStr)();
+        if (!error2) {
+            return console.warn(`[app-review]: 打开链接失败`, error);
         }
-        return await openMarketUrl(url)
+        return await openMarketUrl(url ?? "")
     }
 
 
@@ -54,9 +78,8 @@ export const useAppReview = <T extends I_AppReviewModule>(appReview: T) => {
             ios: reviewWhenIos
         })
         if (!callback) return;
-        callback(appReview.fetchMarketUrl)
+        callback()
     }
-
     return {
         openAppMarket,
         openMarketSchema,

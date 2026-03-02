@@ -1,7 +1,5 @@
 import { PermissionsAndroid, Platform } from "react-native";
 
-type XM_PermissionStatus = "unavailable" | "blocked" | "denied" | "granted" | "limited" | "ignored_permission"
-
 export enum PermissionCode {
     Camera = "0",
     Application = "1",
@@ -32,12 +30,27 @@ export const usePermission = (
 
 
 
+    const checkAndInitialPermissionSdk = () => {
+        if (permissionSdk == undefined) {
+            permissionSdk = require("react-native-permissions")
+        }
+        if (!permissionSdk) throw new Error("react-native-permissions not found");
+    }
+
+    const checkAndInitialFirebaseSdk = () => {
+        if (!firebaseApp) {
+            firebaseApp = require("@react-native-firebase/app")
+        }
+        if (!firebaseApp) throw new Error("@react-native-firebase/app not found");
+
+        if (!firebaseMessaging) {
+            firebaseMessaging = require("@react-native-firebase/messaging")
+        }
+        if (!firebaseMessaging) throw new Error("@react-native-firebase/messaging not found");
+    }
     const requestPermission = async (permissionCode: PermissionCode): Promise<Result> => {
         try {
-            if (permissionSdk == undefined) {
-                permissionSdk = require("react-native-permissions")
-            }
-            if (!permissionSdk) throw new Error("react-native-permissions not found");
+            checkAndInitialPermissionSdk()
             const { PERMISSIONS, RESULTS, request } = permissionSdk;
             requestPermissionStatusManager.update("requesting")
             // 风控数据相关权限
@@ -54,11 +67,11 @@ export const usePermission = (
                 }))
             }
             if (permissionCode == PermissionCode.Calendar) {
-                calendarSdk = require("react-native-calendar-events")
+                calendarSdk = require("react-native-calendar-events").default
                 if (!calendarSdk) throw new Error("react-native-calendar-events not found");
                 const result = await calendarSdk.requestPermissions();
                 if (result != "authorized") return PERMISSIONS.UNAVAILABLE;
-                return PERMISSIONS.GRANTED
+                return RESULTS.GRANTED
             }
             // 其它无关紧要权限
             if (permissionCode == PermissionCode.Microphone) {
@@ -78,16 +91,8 @@ export const usePermission = (
                 }
             }
             if (permissionCode == PermissionCode.FirebaseMessaging) {
-                const requestFirebaseMessagingPermission = async (): Promise<XM_PermissionStatus> => {
-                    if (!firebaseApp) {
-                        firebaseApp = require("@react-native-firebase/app")
-                    }
-                    if (!firebaseApp) throw new Error("@react-native-firebase/app not found");
-
-                    if (!firebaseMessaging) {
-                        firebaseMessaging = require("@react-native-firebase/messaging")
-                    }
-                    if (!firebaseMessaging) throw new Error("@react-native-firebase/messaging not found");
+                const requestFirebaseMessagingPermission = async (): Promise<Result> => {
+                    checkAndInitialFirebaseSdk();
                     try {
                         if (Platform.OS === "ios") {
                             const app = firebaseApp.getApp();
@@ -100,7 +105,7 @@ export const usePermission = (
                             return RESULTS.DENIED;
                         }
                         if (Platform.OS === "android" && Platform.Version >= 33) {
-                            const result = await request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+                            const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
                             return result != RESULTS.GRANTED ? RESULTS.UNAVAILABLE : RESULTS.GRANTED;
                         }
                         if (Platform.OS === "android") {

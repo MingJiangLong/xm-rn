@@ -1,7 +1,5 @@
 import { Platform } from 'react-native';
 
-
-
 interface I_ContactBasic {
     getGroups: (...args: any[]) => Promise<any[]>
     contactsInGroup: (...args: any[]) => Promise<any[]>
@@ -15,12 +13,24 @@ interface I_ContactGroups<T> {
 }
 
 
+/**
+ * 不主动传入模块信息会默认加载一个名为`react-native-contacts`的模块
+ * @param moduleSdk 
+ * @returns 
+ */
+export const useContact = <T extends I_ContactBasic>(moduleSdk?: T) => {
 
+    let module: T = moduleSdk as T;
+    const checkAndInitialModule = () => {
+        if (!module) {
+            module = require("react-native-contacts").default
+        }
+        if (!module) throw new Error("react-native-contacts not found")
+    }
 
-export const useContact = <T extends I_ContactBasic>(module: T) => {
-
-    const { getGroups, contactsInGroup, getAllContacts, } = module
     async function getContactsInGroup() {
+        checkAndInitialModule();
+        const { getGroups, contactsInGroup, } = module
         const groups = await getGroups();
         let temp: I_ContactGroups<(typeof groups)[number]>[] = []
         for (let item of groups) {
@@ -37,7 +47,9 @@ export const useContact = <T extends I_ContactBasic>(module: T) => {
         }, [] as string[]).join(",")
     }
 
-    async function buildIOSContactInfo() {
+    async function buildContactList() {
+        checkAndInitialModule();
+        const { getAllContacts, } = module
         try {
             const contactsInGroups = await getContactsInGroup()
             const contacts = await getAllContacts();
@@ -64,6 +76,7 @@ export const useContact = <T extends I_ContactBasic>(module: T) => {
         }
     }
     const selectContactPhone = async (...args: Parameters<typeof module.selectContactPhone>) => {
+        checkAndInitialModule();
         const contact = await module.selectContactPhone(...args)
         const selectedPhone = contact?.selectedPhone;
         return {
@@ -73,6 +86,6 @@ export const useContact = <T extends I_ContactBasic>(module: T) => {
     }
     return {
         selectContactPhone,
-        buildIOSContactInfo,
+        buildContactList,
     }
 }

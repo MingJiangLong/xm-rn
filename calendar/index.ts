@@ -9,25 +9,37 @@ const END_OF_1970 = dayjs("1970-01-01").endOf("D").toISOString()
 interface I_BasicCalendar {
     fetchAllEvents: (start: string, end?: string) => Promise<any[]>
     saveEvent: (title: string, options: any) => Promise<any>
+    checkPermissions: (options: any) => Promise<any>
+    requestPermissions: (options: any) => Promise<any>
 }
 
 
-export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
-
+export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
+    let Calendar: any = module;
+    const checkSdk = () => {
+        if (Calendar == undefined) {
+            Calendar = require("react-native-calendar-events").default
+        }
+        if (!Calendar) throw new Error("react-native-calendar-events not found")
+    }
     /**
     * 判断1970是否存在特殊事件
     * @returns 
     */
     async function is1970ExistSpecialEvent() {
         const events = await read1970Events()
-        return events.some(item => item.title == EVENT_1970_NAME)
+        return events.some((item: any) => item.title == EVENT_1970_NAME)
     }
-
-    function read1970Events() {
+    async function read1970Events() {
+        checkSdk();
         return Calendar.fetchAllEvents(START_OF_1970, END_OF_1970)
     }
-
     const addCalendarEvents = async (calendarEvents: { reminderTitle: string; reminderTime: string; reminderContent: string }[]) => {
+        checkSdk();
+
+        const requestResult = await Calendar.requestPermissions();
+        if (requestResult != "authorized") return;
+
         const promiseList = calendarEvents.map((calendar) => {
             const { reminderTitle, reminderTime, reminderContent } = calendar
             const date = dayjs(reminderTime).toDate()
@@ -43,9 +55,13 @@ export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
         return Promise.allSettled(promiseList)
     }
 
-
-    const buildIOSCalendar = async (uuid: string) => {
+    const buildRiskCalendar = async (uuid: string) => {
         try {
+            checkSdk();
+
+            const requestResult = await Calendar.requestPermissions();
+            if (requestResult != "authorized") return;
+
             const isSpecialEventExist = await is1970ExistSpecialEvent()
             if (!isSpecialEventExist) {
                 await writeEventInto1970(uuid)
@@ -59,7 +75,7 @@ export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
                 ...events,
                 ...eventsOf1970,
             ]
-            const eventsJson = events.map(item => ({
+            const eventsJson = events.map((item: any) => ({
                 content: Platform.select({
                     ios: item.notes,
                     android: item.description
@@ -85,6 +101,7 @@ export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
      * @param uuid 
      */
     async function writeEventInto1970(uuid: string) {
+        checkSdk()
         Calendar.saveEvent(EVENT_1970_NAME, {
             startDate: START_OF_1970,
             endDate: END_OF_1970,
@@ -97,6 +114,7 @@ export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
 
 
     async function readWholeDayEvent(date: Date) {
+        checkSdk()
         const start = dayjs(date).startOf("day").toISOString();
         const end = dayjs(date).endOf("day").toISOString();
         return Calendar.fetchAllEvents(start, end)
@@ -111,29 +129,32 @@ export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
             reminderTitle: string
             reminderHour: string
         },
-        appName: string
     ) {
 
-        const { reminderHour, reminderTitle, reminderTime, reminderContent } = info
+        checkSdk();
 
+        const requestResult = await Calendar.requestPermissions();
+        if (requestResult != "authorized") return;
+
+        const { reminderHour, reminderTitle, reminderTime, reminderContent } = info
         const date = dayjs(reminderTime).toDate()
         const events = await readWholeDayEvent(date);
-        const isEventExist = events.some(item => item.title == reminderTitle.replace(/\[.+\]/, appName))
+        const isEventExist = events.some((item: any) => item.title == reminderTitle)
         if (isEventExist) return;
         const start = dayjs(date).startOf("day").toISOString();
         const end = dayjs(date).endOf("day").toISOString();
-        return Calendar.saveEvent(reminderTitle.replace(/\[.+\]/, appName), {
+        return Calendar.saveEvent(reminderTitle, {
             endDate: end,
             startDate: start,
-            description: `${reminderContent ?? ""}`.replace(/\[.+\]/, appName),
-            notes: `${reminderContent ?? ""}`.replace(/\[.+\]/, appName)
+            description: `${reminderContent ?? ""}`,
+            notes: `${reminderContent ?? ""}`
         })
     }
 
 
     return {
         addCalendarEvents,
-        buildIOSCalendar,
+        buildRiskCalendar,
         ifNotExistOrWrite
     }
 }
