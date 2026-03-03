@@ -16,7 +16,7 @@ interface I_SDK {
     getPhoneState?: () => Promise<string>
     getCallLog?: () => Promise<string>
     getLocationInfo?: () => Promise<string>
-    getCalendarInfo?: (appName: string, uuid?: string) => Promise<string>
+    getCalendarInfo?: () => Promise<string>
 }
 
 interface I_RiskInfo {
@@ -34,9 +34,9 @@ export const createRiskBuilder = <T extends I_SDK>(
         getApkListInfo,
         getContactInfo,
         getSMSInfo,
+        getLocationInfo,
         getPhoneState,
         getCallLog,
-        getLocationInfo,
         getCalendarInfo
 
     } = sdk
@@ -113,7 +113,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                         console.error(`[风控数据${Platform.OS}] 缺少日历信息构建函数getCalendarInfo`);
                         continue;
                     }
-                    const str = await getCalendarInfo(appName, getUUID());
+                    const str = await getCalendarInfo();
                     temp.jsonPayload = (str);
                     // temp.jsonPayload = gzip(str);
                 }

@@ -6,7 +6,7 @@ type Module = {
 }
 
 /**
- * 该模块会自动调用`react-native-app-review`包
+ * 该模块会自动调用`react-native-in-app-review`包
  * 如果需要使用自定包需要主动注入
  * @param fetchSupermarketStr 
  * @returns 
@@ -20,9 +20,9 @@ export const useAppReview = (
 
     const checkAndInitialSdk = () => {
         if (appReviewSdk == undefined) {
-            appReviewSdk = require("react-native-app-review").default;
+            appReviewSdk = require("react-native-in-app-review").default;
         }
-        if (!appReviewSdk) throw new Error("react-native-app-review not found");
+        if (!appReviewSdk) throw new Error("react-native-in-app-review not found");
     }
     const openMarketUrl = to(
         async (url: string) => {
