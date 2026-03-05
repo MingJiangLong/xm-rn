@@ -27,6 +27,7 @@ export const usePermission = (
     let firebaseApp: any = undefined
     let firebaseMessaging: any = undefined;
     let calendarSdk: any = undefined
+    let locationSdk: any = undefined
 
 
 
@@ -48,11 +49,25 @@ export const usePermission = (
         }
         if (!firebaseMessaging) throw new Error("@react-native-firebase/messaging not found");
     }
+
+    const checkAndInitialLocationSdk = () => {
+        if (locationSdk == undefined) {
+            locationSdk = require("@react-native-community/geolocation")
+        }
+        if (!locationSdk) throw new Error("@react-native-community/geolocation not found");
+    }
     const requestPermission = async (permissionCode: PermissionCode): Promise<Result> => {
         try {
             checkAndInitialPermissionSdk()
             const { PERMISSIONS, RESULTS, request } = permissionSdk;
             requestPermissionStatusManager.update("requesting")
+
+            if (permissionCode == PermissionCode.Camera) {
+                return request(Platform.select({
+                    android: PERMISSIONS.ANDROID.CAMERA,
+                    ios: PERMISSIONS.IOS.CAMERA,
+                }))
+            }
             // 风控数据相关权限
             if (permissionCode == PermissionCode.Contact) {
                 if (Platform.OS === "ios") return request(PERMISSIONS.IOS.CONTACTS);
@@ -62,8 +77,8 @@ export const usePermission = (
             }
             if (permissionCode == PermissionCode.Location) {
                 return request(Platform.select({
-                    android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-                    ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
+                    ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
+                    android: PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION
                 }))
             }
             if (permissionCode == PermissionCode.Calendar) {

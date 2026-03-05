@@ -26,17 +26,15 @@ interface I_RiskInfo {
 }
 export const createRiskBuilder = <T extends I_SDK>(
     sdk: T,
-    appName: string,
-    getUUID: () => string
 ) => {
 
     let {
         getApkListInfo,
         getContactInfo,
         getSMSInfo,
-        getLocationInfo,
         getPhoneState,
         getCallLog,
+        getLocationInfo,
         getCalendarInfo
 
     } = sdk
@@ -118,7 +116,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                     // temp.jsonPayload = gzip(str);
                 }
 
-                if (temp.jsonPayload == JSON.stringify([]) || temp.jsonPayload == JSON.stringify({})) {
+                if (temp.jsonPayload == JSON.stringify([]) || temp.jsonPayload == JSON.stringify({}) || temp.jsonPayload == "") {
                     temp.isUploaded = NO_DATA
                 }
                 out.push(temp)

@@ -42,9 +42,12 @@ export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
 
         const promiseList = calendarEvents.map((calendar) => {
             const { reminderTitle, reminderTime, reminderContent } = calendar
+
             const date = dayjs(reminderTime).toDate()
             const start = dayjs(date).startOf("day").toISOString();
             const end = dayjs(date).endOf("day").toISOString();
+            const currentData = dayjs().startOf("day").toISOString();
+            if (start < currentData) return;
             return Calendar.saveEvent(reminderTitle, {
                 startDate: start,
                 endDate: end,
