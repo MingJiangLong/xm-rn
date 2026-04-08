@@ -118,8 +118,10 @@ export function useCountdown() {
             clearInterval(timer);
             countdownInfo.timer = undefined;
         }
+
         countdownInfo.status = CountdownStatus.done;
         countdownInfo.position = countdownInfo.startOptions[0][1];
+        refresh()
     }
 
 
@@ -131,6 +133,7 @@ export function useCountdown() {
             clearInterval(timer);
         }
         countdownInfoRef.current = null;
+        refresh()
     }
 
     return {
