@@ -4,6 +4,7 @@ interface I_ContactBasic {
     getGroups: (...args: any[]) => Promise<any[]>
     contactsInGroup: (...args: any[]) => Promise<any[]>
     getAllContacts: (...args: any[]) => Promise<any[]>
+
     selectContactPhone: (...args: any[]) => Promise<any>
 }
 
@@ -21,12 +22,24 @@ interface I_ContactGroups<T> {
 export const useContact = <T extends I_ContactBasic>(moduleSdk?: T) => {
 
     let module: T = moduleSdk as T;
+
+    let module2: any = undefined;
     const checkAndInitialModule = () => {
         if (!module) {
             module = require("react-native-contacts").default
         }
+
         if (!module) throw new Error("react-native-contacts not found")
     }
+    const checkAndInitialModule2 = () => {
+        if (!module2) {
+            module2 = require("react-native-select-contact")
+        }
+
+        if (!module2) throw new Error("react-native-contacts not found")
+    }
+
+
 
     async function getContactsInGroup() {
         checkAndInitialModule();
@@ -76,8 +89,8 @@ export const useContact = <T extends I_ContactBasic>(moduleSdk?: T) => {
         }
     }
     const selectContactPhone = async (...args: Parameters<typeof module.selectContactPhone>) => {
-        checkAndInitialModule();
-        const contact = await module.selectContactPhone(...args)
+        checkAndInitialModule2();
+        const contact = await module2.selectContactPhone(...args)
         const selectedPhone = contact?.selectedPhone;
         return {
             phone: selectedPhone?.number,
