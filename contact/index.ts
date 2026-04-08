@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 interface I_ContactBasic {
     getGroups: (...args: any[]) => Promise<any[]>
     contactsInGroup: (...args: any[]) => Promise<any[]>
-    getAllContacts: (...args: any[]) => Promise<any[]>
+    getAll: (...args: any[]) => Promise<any[]>
 
     selectContactPhone: (...args: any[]) => Promise<any>
 }
@@ -62,7 +62,7 @@ export const useContact = <T extends I_ContactBasic>(moduleSdk?: T) => {
 
     async function buildContactList() {
         checkAndInitialModule();
-        const { getAllContacts, } = module
+        const { getAll:getAllContacts, } = module
         try {
             const contactsInGroups = await getContactsInGroup()
             const contacts = await getAllContacts();
