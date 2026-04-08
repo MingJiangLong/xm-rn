@@ -28,9 +28,9 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule>(sdk?: T) => {
 
     const checkAndInitialSdk = () => {
         if (!sdk) {
-            sdk = require("react-native-device-info").default
+            DeviceInfo = require("react-native-device-info").default
         }
-        if (!sdk) throw new Error("react-native-device-info not found")
+        if (!DeviceInfo) throw new Error("react-native-device-info not found")
     }
     const fetchIpAddress = addTimeout(
         async function (url: string = "https://icanhazip.com/") {
