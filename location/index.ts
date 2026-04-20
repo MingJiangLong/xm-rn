@@ -20,9 +20,9 @@ export const useLocation = <T extends I_LocationBasic>(sdk?: T) => {
     const getSdk = () => {
         let module: any = sdk;
         if (!module) {
-            module = require("react-native-geolocation-service").default
+            module = require("@react-native-community/geolocation").default
         }
-        if (!module) throw new Error("react-native-geolocation-service not found")
+        if (!module) throw new Error("@react-native-community/geolocation not found")
         return module
     }
 
