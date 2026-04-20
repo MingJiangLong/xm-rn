@@ -32,25 +32,17 @@ interface I_ContactGroups<T> {
  * @returns 
  */
 export const useContact = <T extends ContactsModule, D extends SelectContactModule>(
-    contactsModule?: T, selectContactModule?: D
+    contactsModule: T, selectContactModule: D
 ) => {
 
     function getContactsModule() {
-        let contacts = contactsModule;
-        if (!contacts) {
-            contacts = require("react-native-contacts").default
-        }
-        if (!contacts) throw new Error("react-native-contacts not found")
-        return contacts;
+        if (!contactsModule) throw new Error("argument contactsModule is required")
+        return contactsModule;
     }
     const getSelectContactModule = () => {
-        let selectContact = selectContactModule;
-        if (!selectContact) {
-            selectContact = require("react-native-select-contact")
-        }
 
-        if (!selectContact) throw new Error("react-native-contacts not found")
-        return selectContact;
+        if (!selectContactModule) throw new Error("argument selectContactModule is required")
+        return selectContactModule;
     }
 
 

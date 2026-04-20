@@ -21,7 +21,6 @@ export enum PermissionCode {
 }
 type Result = "unavailable" | "blocked" | "denied" | "granted" | "limited"
 export const usePermission = () => {
-    let calendarSdk: any = undefined
     const getPermissionSdk = () => {
         let permissionSdk: any = undefined;
         if (permissionSdk == undefined) {

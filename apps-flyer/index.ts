@@ -5,18 +5,12 @@ interface I_BasicModule {
 }
 
 
-export const useAppsFlyer = <T extends I_BasicModule>(module?: T) => {
-
-
-
+export const useAppsFlyer = <T extends I_BasicModule>(module: T) => {
     const getSdk = () => {
-        let appsFlyerModule: any = module;
-        if (appsFlyerModule == undefined) {
-            appsFlyerModule = require("react-native-appsflyer").default
-        }
-        if (!appsFlyerModule) throw new Error("react-native-appsflyer not found")
 
-        return appsFlyerModule;
+        if (!module) throw new Error("argument module is required")
+
+        return module;
     }
     const initSdk = (options: Parameters<T["initSdk"]>[0]) => {
 

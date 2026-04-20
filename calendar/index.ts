@@ -9,19 +9,16 @@ const END_OF_1970 = dayjs("1970-01-01").endOf("D").toISOString()
 interface I_BasicCalendar {
     fetchAllEvents: (start: string, end?: string) => Promise<any[]>
     saveEvent: (title: string, options: any) => Promise<any>
-    checkPermissions: (options: any) => Promise<any>
-    requestPermissions: (options: any) => Promise<any>
+    checkPermissions: (options?: any) => Promise<any>
+    requestPermissions: (options?: any) => Promise<any>
 }
 
 
-export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
+export const useCalendar = <T extends I_BasicCalendar>(module: T) => {
     const getSdk = () => {
-        let calendarSdk: any = module;
-        if (calendarSdk == undefined) {
-            calendarSdk = require("react-native-calendar-events").default
-        }
-        if (!calendarSdk) throw new Error("react-native-calendar-events not found")
-        return calendarSdk
+
+        if (!module) throw new Error("argument module is required")
+        return module
     }
     /**
     * 判断1970是否存在特殊事件

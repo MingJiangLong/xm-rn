@@ -30,21 +30,13 @@ const JAIL_BREAK_SDK_NAME = "react-native-jail-break"
 export const useDeviceInfo = <T extends I_DeviceBasicModule, D extends JailBreakSdk>(deviceInfoSdk?: T, jailbreakSdk?: D) => {
 
     const getDeviceInfoModule = () => {
-        let deviceInfo = deviceInfoSdk;
-        if (!deviceInfoSdk) {
-            deviceInfo = require("react-native-device-info").default
-        }
-        if (!deviceInfo) throw new Error("react-native-device-info not found")
-        return deviceInfo;
+        if (!deviceInfoSdk) throw new Error("argument deviceInfoSdk is required")
+        return deviceInfoSdk;
     }
 
     const getJailbreakModule = () => {
-        let jailBreak = jailbreakSdk;
-        if (!jailBreak) {
-            jailBreak = require("react-native-jailbreak").default
-        }
-        if (!jailBreak) throw new Error("react-native-jailbreak not found")
-        return jailBreak;
+        if (!jailbreakSdk) throw new Error("argument jailbreakSdk is required")
+        return jailbreakSdk;
     }
     const fetchIpAddress = addTimeout(
         async function (url: string = "https://icanhazip.com/") {
