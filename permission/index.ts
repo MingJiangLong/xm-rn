@@ -1,4 +1,6 @@
 import { PermissionsAndroid, Platform } from "react-native";
+import { useFirebase } from "../firebase";
+import { useCalendar } from "../calendar";
 
 export enum PermissionCode {
     Camera = "0",
@@ -18,47 +20,23 @@ export enum PermissionCode {
     Wifi = "11",
 }
 type Result = "unavailable" | "blocked" | "denied" | "granted" | "limited"
-export const usePermission = (
-    interceptor?: (permissionCode: PermissionCode, process: number) => Promise<Result>
-) => {
-
-
-    let permissionSdk: any = undefined;
-    let firebaseApp: any = undefined
-    let firebaseMessaging: any = undefined;
+export const usePermission = () => {
     let calendarSdk: any = undefined
-    let locationSdk: any = undefined
-
-
-
-    const checkAndInitialPermissionSdk = () => {
+    const getPermissionSdk = () => {
+        let permissionSdk: any = undefined;
         if (permissionSdk == undefined) {
             permissionSdk = require("react-native-permissions")
         }
         if (!permissionSdk) throw new Error("react-native-permissions not found");
+        return permissionSdk;
     }
 
-    const checkAndInitialFirebaseSdk = () => {
-        if (!firebaseApp) {
-            firebaseApp = require("@react-native-firebase/app")
-        }
-        if (!firebaseApp) throw new Error("@react-native-firebase/app not found");
 
-        if (!firebaseMessaging) {
-            firebaseMessaging = require("@react-native-firebase/messaging")
-        }
-        if (!firebaseMessaging) throw new Error("@react-native-firebase/messaging not found");
-    }
 
-    const checkAndInitialLocationSdk = () => {
-        if (locationSdk == undefined) {
-            locationSdk = require("@react-native-community/geolocation")
-        }
-        if (!locationSdk) throw new Error("@react-native-community/geolocation not found");
-    }
+
     const requestPermission = async (permissionCode: PermissionCode): Promise<Result> => {
         try {
-            checkAndInitialPermissionSdk()
+            const permissionSdk = getPermissionSdk();
             const { PERMISSIONS, RESULTS, request } = permissionSdk;
             requestPermissionStatusManager.update("requesting")
 
@@ -82,8 +60,7 @@ export const usePermission = (
                 }))
             }
             if (permissionCode == PermissionCode.Calendar) {
-                calendarSdk = require("react-native-calendar-events").default
-                if (!calendarSdk) throw new Error("react-native-calendar-events not found");
+                const calendarSdk = useCalendar();
                 const result = await calendarSdk.requestPermissions();
                 if (result != "authorized") return PERMISSIONS.UNAVAILABLE;
                 return RESULTS.GRANTED
@@ -107,12 +84,10 @@ export const usePermission = (
             }
             if (permissionCode == PermissionCode.FirebaseMessaging) {
                 const requestFirebaseMessagingPermission = async (): Promise<Result> => {
-                    checkAndInitialFirebaseSdk();
                     try {
                         if (Platform.OS === "ios") {
-                            const app = firebaseApp.getApp();
-                            const messaging = firebaseMessaging.getMessaging(app)
-                            const authStatus = await firebaseMessaging.requestPermission(messaging);
+                            const firebase = useFirebase()
+                            const authStatus = await firebase.requestPermission();
                             if (authStatus === 1 ||
                                 authStatus === 2) {
                                 return RESULTS.GRANTED
@@ -170,12 +145,8 @@ export const usePermission = (
     }
 
     const openSettings = async (...args: any) => {
-        if (permissionSdk == undefined) {
-            permissionSdk = require("react-native-permissions")
-        }
-        if (!permissionSdk) throw new Error("react-native-permissions not found");
-        const { openSettings } = permissionSdk;
-        return openSettings(...args)
+        const permissionSdk = getPermissionSdk();
+        return permissionSdk.openSettings(...args)
     }
 
 

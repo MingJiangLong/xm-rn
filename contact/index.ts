@@ -1,13 +1,25 @@
 import { Platform } from 'react-native';
 
-interface I_ContactBasic {
+export interface Contact {
+    recordId: string,
+    name: string,
+    phones: any[],
+    emails: any[],
+    postalAddresses: any[]
+}
+
+export interface ContactPhoneSelection {
+    contact: Contact,
+    selectedPhone: any
+}
+interface ContactsModule {
     getGroups: (...args: any[]) => Promise<any[]>
     contactsInGroup: (...args: any[]) => Promise<any[]>
     getAll: (...args: any[]) => Promise<any[]>
-
+}
+interface SelectContactModule {
     selectContactPhone: (...args: any[]) => Promise<any>
 }
-
 interface I_ContactGroups<T> {
     groupName: string
     list: T[]
@@ -19,31 +31,32 @@ interface I_ContactGroups<T> {
  * @param moduleSdk 
  * @returns 
  */
-export const useContact = <T extends I_ContactBasic>(moduleSdk?: T) => {
+export const useContact = <T extends ContactsModule, D extends SelectContactModule>(
+    contactsModule?: T, selectContactModule?: D
+) => {
 
-    let module: T = moduleSdk as T;
-
-    let module2: any = undefined;
-    const checkAndInitialModule = () => {
-        if (!module) {
-            module = require("react-native-contacts").default
+    function getContactsModule() {
+        let contacts = contactsModule;
+        if (!contacts) {
+            contacts = require("react-native-contacts").default
         }
-
-        if (!module) throw new Error("react-native-contacts not found")
+        if (!contacts) throw new Error("react-native-contacts not found")
+        return contacts;
     }
-    const checkAndInitialModule2 = () => {
-        if (!module2) {
-            module2 = require("react-native-select-contact")
+    const getSelectContactModule = () => {
+        let selectContact = selectContactModule;
+        if (!selectContact) {
+            selectContact = require("react-native-select-contact")
         }
 
-        if (!module2) throw new Error("react-native-contacts not found")
+        if (!selectContact) throw new Error("react-native-contacts not found")
+        return selectContact;
     }
 
 
 
     async function getContactsInGroup() {
-        checkAndInitialModule();
-        const { getGroups, contactsInGroup, } = module
+        const { getGroups, contactsInGroup, } = getContactsModule()
         const groups = await getGroups();
         let temp: I_ContactGroups<(typeof groups)[number]>[] = []
         for (let item of groups) {
@@ -61,8 +74,7 @@ export const useContact = <T extends I_ContactBasic>(moduleSdk?: T) => {
     }
 
     async function buildContactList() {
-        checkAndInitialModule();
-        const { getAll:getAllContacts, } = module
+        const { getAll: getAllContacts, } = getContactsModule()
         try {
             const contactsInGroups = await getContactsInGroup()
             const contacts = await getAllContacts();
@@ -70,14 +82,14 @@ export const useContact = <T extends I_ContactBasic>(moduleSdk?: T) => {
                 const name = `${item?.givenName ?? ""} ${item?.familyName}`.trim();
                 return item.phoneNumbers.map((item2: any) => {
                     return ({
-                        last_update_times: 0,
-                        source: 'device',
-                        contact_times: 0,
-                        last_used_times: 0,
-                        name,
                         last_contact_time: 0,
+                        contact_times: 0,
+                        last_update_times: 0,
+                        last_used_times: 0,
+                        source: 'device',
+                        device: "ios",
                         phone: item2.number,
-                        create_time: `${Date.now()}`.slice(0, 10),
+                        name,
                         groups: findGroupsForContact(item.recordID, contactsInGroups),
                     })
                 })
@@ -88,9 +100,9 @@ export const useContact = <T extends I_ContactBasic>(moduleSdk?: T) => {
             throw error
         }
     }
-    const selectContactPhone = async (...args: Parameters<typeof module.selectContactPhone>) => {
-        checkAndInitialModule2();
-        const contact = await module2.selectContactPhone(...args)
+    const selectContactPhone = async (...args: any[]) => {
+        const selectContactModule = getSelectContactModule();
+        const contact = await selectContactModule.selectContactPhone(...args)
         const selectedPhone = contact?.selectedPhone;
         return {
             phone: selectedPhone?.number,

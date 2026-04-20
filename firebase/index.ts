@@ -20,41 +20,40 @@ export interface I_BasicFirebase {
 
 
 export const useFirebase = <T extends I_BasicFirebase>() => {
-
-
-    let firebaseApp: any = null;
-    let firebaseMessaging: any = null;
-    let firebaseAnalytics: any = null;
-
-
-    const checkAndInitialFirebaseApp = () => {
+    const getFirebaseAppSdk = () => {
+        let firebaseApp: any = null;
         if (!firebaseApp) {
             firebaseApp = require("@react-native-firebase/app")
         }
         if (!firebaseApp) throw new Error("@react-native-firebase/app not found");
+        return firebaseApp;
     }
 
-    const checkAndInitialFirebaseMessaging = () => {
+    const getFirebaseMessagingSdk = () => {
+        let firebaseMessaging: any = null;
         if (!firebaseMessaging) {
             firebaseMessaging = require("@react-native-firebase/messaging")
         }
         if (!firebaseMessaging) throw new Error("@react-native-firebase/messaging not found");
+        return firebaseMessaging;
     }
 
-    const checkAndInitialFirebaseAnalytics = () => {
+    const getFirebaseAnalyticsSdk = () => {
+        let firebaseAnalytics: any = null;
         if (!firebaseAnalytics) {
             firebaseAnalytics = require("@react-native-firebase/analytics")
         }
-        if (!firebaseMessaging) throw new Error("@react-native-firebase/messaging not found");
+        if (!firebaseAnalytics) throw new Error("@react-native-firebase/analytics not found");
+        return firebaseAnalytics;
     }
 
 
     const getMessagingID = addTimeout(
         async () => {
-            checkAndInitialFirebaseApp()
+            const firebaseApp = getFirebaseAppSdk();
+            const firebaseMessaging = getFirebaseMessagingSdk();
             const { getApp, } = firebaseApp;
 
-            checkAndInitialFirebaseMessaging();
             const {
                 getMessaging, isDeviceRegisteredForRemoteMessages,
                 registerDeviceForRemoteMessages, getToken
@@ -71,11 +70,11 @@ export const useFirebase = <T extends I_BasicFirebase>() => {
 
     const getFirebaseAnalyticsID = addTimeout(
         async () => {
-            checkAndInitialFirebaseApp()
+            const firebaseApp = getFirebaseAppSdk();
+            const firebaseAnalytics = getFirebaseAnalyticsSdk();
             const { getApp, } = firebaseApp;
-            const app = getApp();
-            checkAndInitialFirebaseAnalytics()
             const { getAnalytics, getAppInstanceId } = firebaseAnalytics;
+            const app = getApp();
             const analytics = getAnalytics(app);
             const token = await getAppInstanceId(analytics);
             return token;
@@ -84,15 +83,14 @@ export const useFirebase = <T extends I_BasicFirebase>() => {
 
     const deleteFirebaseMessagingToken = addTimeout(
         () => {
-            checkAndInitialFirebaseApp()
+            const firebaseApp = getFirebaseAppSdk();
+            const firebaseMessaging = getFirebaseMessagingSdk();
             const { getApp, } = firebaseApp;
-            const app = getApp();
-
-            checkAndInitialFirebaseMessaging();
             const {
                 getMessaging, deleteToken,
             } = firebaseMessaging;
 
+            const app = getApp();
             const messaging = getMessaging(app);
             return deleteToken(messaging);
         }
@@ -121,12 +119,28 @@ export const useFirebase = <T extends I_BasicFirebase>() => {
         return info;
     }
 
+    const requestPermission = async () => {
+        const firebaseApp = getFirebaseAppSdk();
+        const firebaseMessaging = getFirebaseMessagingSdk();
+
+        const { getApp, } = firebaseApp;
+        const {
+            getMessaging,
+            requestPermission
+        } = firebaseMessaging;
+        const app = getApp();
+        const messaging = getMessaging(app)
+        const authStatus = await requestPermission(messaging);
+        return authStatus as number;
+    }
+
 
     return {
         getMessagingID,
         getFirebaseAnalyticsID,
         deleteFirebaseMessagingToken,
-        getFirebaseTokens
+        getFirebaseTokens,
+        requestPermission
     }
 }
 

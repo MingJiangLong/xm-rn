@@ -6,16 +6,26 @@ const IMAGE_DEFAULT_OPTION = {
     quality: .5,
 } as const
 
-
+// import { launchCamera, launchImageLibrary } from 'react-native-image-picker'
 type I_ImagePickerBasic = {
     launchCamera: (...args: any[]) => Promise<any>
     launchImageLibrary: (...args: any[]) => Promise<any>
 }
 
 
-export const useImagePicker = <T extends I_ImagePickerBasic>(module: T) => {
+export const useImagePicker = <T extends I_ImagePickerBasic>(moduleSdk?: T) => {
+
+    const getSdk = () => {
+        let picker = moduleSdk;
+        if (!picker) {
+            picker = require("react-native-image-picker").default
+        }
+        if (!picker) throw new Error("react-native-image-picker not found")
+        return picker
+    }
 
     async function openCamera(options?: Parameters<T["launchCamera"]>[0]) {
+        const module = getSdk();
         const result = await module.launchCamera({
             ...IMAGE_DEFAULT_OPTION,
             presentationStyle: "fullScreen",
@@ -32,6 +42,7 @@ export const useImagePicker = <T extends I_ImagePickerBasic>(module: T) => {
         } as const
     }
     async function openGallery(options?: Parameters<T["launchImageLibrary"]>[0]) {
+        const module = getSdk();
         const result = await module.launchImageLibrary({
             ...IMAGE_DEFAULT_OPTION,
             presentationStyle: "fullScreen",

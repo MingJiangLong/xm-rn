@@ -16,13 +16,13 @@ export const useAppReview = (
     customModule?: Module
 ) => {
 
-    let appReviewSdk: any = customModule
-
-    const checkAndInitialSdk = () => {
+    const getSdk = () => {
+        let appReviewSdk: any = customModule
         if (appReviewSdk == undefined) {
             appReviewSdk = require("react-native-in-app-review").default;
         }
         if (!appReviewSdk) throw new Error("react-native-in-app-review not found");
+        return appReviewSdk;
     }
     const openMarketUrl = to(
         async (url: string) => {
@@ -32,7 +32,7 @@ export const useAppReview = (
     )
     const openMarketSchema = to(
         async () => {
-            checkAndInitialSdk()
+            const appReviewSdk = getSdk()
             if (!appReviewSdk.isAvailable()) throw new Error("not supported app review")
             const result = await appReviewSdk.RequestInAppReview()
             if (result == false) throw new Error("not supported app review")

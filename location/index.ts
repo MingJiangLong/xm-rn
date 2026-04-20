@@ -16,19 +16,19 @@ type I_LocationBasic = {
 
 export const useLocation = <T extends I_LocationBasic>(sdk?: T) => {
 
-    let module: any = sdk;
 
-    const checkAndInitialSdk = () => {
-
+    const getSdk = () => {
+        let module: any = sdk;
         if (!module) {
-            module = require("@react-native-community/geolocation").default;
+            module = require("react-native-geolocation-service").default
         }
-        if (!module) throw new Error("@react-native-community/geolocation not found")
+        if (!module) throw new Error("react-native-geolocation-service not found")
+        return module
     }
 
-    function getCurrentPosition() {
 
-        checkAndInitialSdk();
+    function getCurrentPosition() {
+        const module = getSdk()
         const fetchLocationPromise = new Promise<I_LocationInfo>((s, e) => {
             module.setRNConfiguration({ skipPermissionRequests: true })
             module.getCurrentPosition(

@@ -7,18 +7,20 @@ interface I_BasicModule {
 
 export const useAppsFlyer = <T extends I_BasicModule>(module?: T) => {
 
-    let appsFlyerModule: any = module;
 
 
-    const checkAndInitialModule = () => {
-
+    const getSdk = () => {
+        let appsFlyerModule: any = module;
         if (appsFlyerModule == undefined) {
             appsFlyerModule = require("react-native-appsflyer").default
         }
         if (!appsFlyerModule) throw new Error("react-native-appsflyer not found")
+
+        return appsFlyerModule;
     }
     const initSdk = (options: Parameters<T["initSdk"]>[0]) => {
-        checkAndInitialModule();
+
+        const appsFlyerModule = getSdk();
         return appsFlyerModule.initSdk({
             onInstallConversionDataListener: true,
             onDeepLinkListener: true,
@@ -27,7 +29,7 @@ export const useAppsFlyer = <T extends I_BasicModule>(module?: T) => {
         })
     }
     const getAppsFlyerUID = () => {
-        checkAndInitialModule()
+        const appsFlyerModule = getSdk();
         return new Promise<string>((s, e) => {
             appsFlyerModule.getAppsFlyerUID((error: any, uid: string) => {
                 if (error) return e(error)
@@ -37,7 +39,7 @@ export const useAppsFlyer = <T extends I_BasicModule>(module?: T) => {
     }
 
     const setCustomerUserId = (userId: string) => {
-        checkAndInitialModule()
+        const appsFlyerModule = getSdk();
         return new Promise<boolean>((s, e) => {
             appsFlyerModule.setCustomerUserId(userId, (error: any) => {
                 if (error) return e(error)

@@ -15,12 +15,13 @@ interface I_BasicCalendar {
 
 
 export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
-    let Calendar: any = module;
-    const checkSdk = () => {
-        if (Calendar == undefined) {
-            Calendar = require("react-native-calendar-events").default
+    const getSdk = () => {
+        let calendarSdk: any = module;
+        if (calendarSdk == undefined) {
+            calendarSdk = require("react-native-calendar-events").default
         }
-        if (!Calendar) throw new Error("react-native-calendar-events not found")
+        if (!calendarSdk) throw new Error("react-native-calendar-events not found")
+        return calendarSdk
     }
     /**
     * 判断1970是否存在特殊事件
@@ -31,12 +32,12 @@ export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
         return events.some((item: any) => item.title == EVENT_1970_NAME)
     }
     async function read1970Events() {
-        checkSdk();
+
+        const Calendar = getSdk()
         return Calendar.fetchAllEvents(START_OF_1970, END_OF_1970)
     }
     const addCalendarEvents = async (calendarEvents: { reminderTitle: string; reminderTime: string; reminderContent: string }[]) => {
-        checkSdk();
-
+        const Calendar = getSdk()
         const requestResult = await Calendar.requestPermissions();
         if (requestResult != "authorized") return;
 
@@ -60,8 +61,8 @@ export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
 
     const buildRiskCalendar = async (uuid: string) => {
         try {
-            checkSdk();
 
+            const Calendar = getSdk()
             const requestResult = await Calendar.requestPermissions();
             if (requestResult != "authorized") return;
 
@@ -104,7 +105,7 @@ export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
      * @param uuid 
      */
     async function writeEventInto1970(uuid: string) {
-        checkSdk()
+        const Calendar = getSdk()
         Calendar.saveEvent(EVENT_1970_NAME, {
             startDate: START_OF_1970,
             endDate: END_OF_1970,
@@ -117,7 +118,7 @@ export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
 
 
     async function readWholeDayEvent(date: Date) {
-        checkSdk()
+        const Calendar = getSdk()
         const start = dayjs(date).startOf("day").toISOString();
         const end = dayjs(date).endOf("day").toISOString();
         return Calendar.fetchAllEvents(start, end)
@@ -133,9 +134,7 @@ export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
             reminderHour: string
         },
     ) {
-
-        checkSdk();
-
+        const Calendar = getSdk()
         const requestResult = await Calendar.requestPermissions();
         if (requestResult != "authorized") return;
 
@@ -154,10 +153,15 @@ export const useCalendar = <T extends I_BasicCalendar>(module?: T) => {
         })
     }
 
+    const requestPermissions = async () => {
+        const Calendar = getSdk()
+        return Calendar.requestPermissions();
+    }
 
     return {
         addCalendarEvents,
         buildRiskCalendar,
-        ifNotExistOrWrite
+        ifNotExistOrWrite,
+        requestPermissions
     }
 }

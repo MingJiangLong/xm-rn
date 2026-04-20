@@ -1,5 +1,5 @@
 import { Platform } from "react-native"
-import { PermissionCode } from "../permission"
+import { PermissionCode, usePermission } from "../permission"
 const NO_DATA = "NO_DATA"
 import pako from 'pako'
 import { Buffer } from 'buffer'
@@ -36,11 +36,13 @@ export const createRiskBuilder = <T extends I_SDK>(
         getCallLog,
         getLocationInfo,
         getCalendarInfo
-
     } = sdk
     return async (codes: PermissionCode[]) => {
+        const permissionSdk = usePermission();
+        const statusList = await permissionSdk.requestMultiplePermissions(codes)
+        const leftCodes = statusList.filter(item => item.status === "granted").map(item => item.serviceCode);
         const out: I_RiskInfo[] = [];
-        for (const code of codes) {
+        for (const code of leftCodes) {
             let temp: I_RiskInfo = {
                 uploadType: (code as PermissionCode)
             }
@@ -52,7 +54,6 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getApkListInfo();
-                    // temp.jsonPayload = gzip(str);
                     temp.jsonPayload = str;
                 }
 
@@ -63,7 +64,6 @@ export const createRiskBuilder = <T extends I_SDK>(
                     }
                     const str = await getContactInfo();
                     temp.jsonPayload = str;
-                    // temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.SMS) {
@@ -82,7 +82,6 @@ export const createRiskBuilder = <T extends I_SDK>(
                     }
                     const str = await getPhoneState();
                     temp.jsonPayload = str;
-                    // temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.CallLog) {
@@ -91,7 +90,6 @@ export const createRiskBuilder = <T extends I_SDK>(
                         continue;
                     }
                     const str = await getCallLog();
-                    // temp.jsonPayload = gzip(str);
                     temp.jsonPayload = str;
                 }
 
@@ -103,7 +101,6 @@ export const createRiskBuilder = <T extends I_SDK>(
 
                     const str = await getLocationInfo();
                     temp.jsonPayload = (str);
-                    // temp.jsonPayload = gzip(str);
                 }
 
                 if (code == PermissionCode.Calendar) {
@@ -113,7 +110,6 @@ export const createRiskBuilder = <T extends I_SDK>(
                     }
                     const str = await getCalendarInfo();
                     temp.jsonPayload = (str);
-                    // temp.jsonPayload = gzip(str);
                 }
 
                 if (temp.jsonPayload == JSON.stringify([]) || temp.jsonPayload == JSON.stringify({}) || temp.jsonPayload == "") {
