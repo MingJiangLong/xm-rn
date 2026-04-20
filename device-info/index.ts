@@ -41,9 +41,9 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule, D extends JailBreak
     const getJailbreakModule = () => {
         let jailBreak = jailbreakSdk;
         if (!jailBreak) {
-            jailBreak = require("react-native-jail-break").default
+            jailBreak = require("react-native-jailbreak").default
         }
-        if (!jailBreak) throw new Error("react-native-jail-break not found")
+        if (!jailBreak) throw new Error("react-native-jailbreak not found")
         return jailBreak;
     }
     const fetchIpAddress = addTimeout(
