@@ -55,7 +55,7 @@ export const createRiskBuilder = <T extends I_SDK>(
                     }
                     const str = await getApkListInfo();
                     // temp.jsonPayload = gzip(str);
-                    // temp.jsonPayload = str;
+                    temp.jsonPayload = str;
                 }
 
                 if (code == PermissionCode.Contact) {
