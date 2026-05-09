@@ -77,10 +77,6 @@ export class AsyncTaskLock {
         }
     }
 
-    /**
-     * 自动管理锁的执行器（推荐用法）
-     * 自动 acquire 和 release，支持异常捕获
-     */
     async run<T>(task: () => Promise<T>, timeout?: number): Promise<T> {
         await this.acquire(timeout);
         try {

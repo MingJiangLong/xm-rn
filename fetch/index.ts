@@ -1,17 +1,9 @@
 import { NotAuthenticatedError } from "../error";
-
-interface Options extends RequestInit {
-    timeout?: number;
-}
-
-
 class ApiLogger {
     private startTime: number = 0;
-
     constructor(private desc: string, private showLog: boolean) {
         if (this.showLog) this.startTime = Date.now();
     }
-
     logRequest(url: string, data: any) {
         if (!this.showLog) return;
         console.log(
@@ -21,7 +13,6 @@ class ApiLogger {
             { url, data }
         );
     }
-
     logResponse(data: any) {
         if (!this.showLog) return;
         const duration = Date.now() - this.startTime;
@@ -32,7 +23,6 @@ class ApiLogger {
             { data }
         );
     }
-
     logError(error: any) {
         if (!this.showLog) return;
         const duration = Date.now() - this.startTime;

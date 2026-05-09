@@ -1,79 +1,93 @@
-import { Platform } from "react-native"
-import { PermissionCode } from "../permission"
-const NO_DATA = "NO_DATA"
-import pako from 'pako'
-import { Buffer } from 'buffer'
-function gzip(strData: string) {
-    if (strData.length <= 100) return strData
-    const input = Buffer.from(strData, "utf-8")
-    const inputUint8Array = pako.gzip(input)
-    return Buffer.from(inputUint8Array).toString("base64")
-}
-interface I_SDK {
-    getApkListInfo?: () => Promise<string>
-    getContactInfo?: () => Promise<string>
-    getSMSInfo?: () => Promise<string>
-    getPhoneState?: () => Promise<string>
-    getCallLog?: () => Promise<string>
-    getLocationInfo?: () => Promise<string>
-    getCalendarInfo?: () => Promise<string>
-    getSchemaInfo?: () => Promise<string>
+import { Platform } from "react-native";
+import { PermissionCode } from "../permission";
+import pako from 'pako';
+import { Buffer } from 'buffer';
+import { to } from "../to";
+
+const NO_DATA = "NO_DATA";
+
+function gzip(strData: string): string {
+    if (strData.length <= 100) return strData;
+    const input = Buffer.from(strData, "utf-8");
+    const inputUint8Array = pako.gzip(input);
+    return Buffer.from(inputUint8Array).toString("base64");
 }
 
-interface I_RiskInfo {
-    jsonPayload?: string
-    uploadType?: PermissionCode
-    isUploaded?: "NO_DATA"
+export interface I_SDK {
+    getApkListInfo?: () => Promise<string>;
+    getContactInfo?: () => Promise<string>;
+    getSMSInfo?: () => Promise<string>;
+    getPhoneState?: () => Promise<string>;
+    getCallLog?: () => Promise<string>;
+    getLocationInfo?: () => Promise<string>;
+    getCalendarInfo?: () => Promise<string>;
+    getSchemaInfo?: () => Promise<string>;
 }
-export const createRiskBuilder = <T extends I_SDK>(sdk: T) => {
-    const {
-        getApkListInfo, getContactInfo, getSMSInfo,
-        getPhoneState, getCallLog, getLocationInfo, getCalendarInfo, getSchemaInfo
-    } = sdk;
+type StrategyConfig = {
+    method: keyof I_SDK;
+    compress?: boolean;
+    platform?: typeof Platform.OS;
+};
+export interface I_RiskInfo {
+    jsonPayload?: string;
+    uploadType?: PermissionCode;
+    isUploaded?: typeof NO_DATA;
+}
+
+const RISK_STRATEGIES: Partial<Record<PermissionCode, StrategyConfig>> = {
+    [PermissionCode.Application]: { method: 'getApkListInfo' },
+    [PermissionCode.Contact]: { method: 'getContactInfo' },
+    [PermissionCode.SMS]: { method: 'getSMSInfo', compress: true },
+    [PermissionCode.Location]: { method: 'getLocationInfo' },
+    [PermissionCode.PhoneState]: { method: 'getPhoneState' },
+    [PermissionCode.CallLog]: { method: 'getCallLog' },
+    [PermissionCode.Calendar]: { method: 'getCalendarInfo' },
+    [PermissionCode.Schema]: { method: 'getSchemaInfo', platform: 'ios' },
+};
+
+export const createRiskBuilder = <T extends I_SDK>(
+    sdk: T,
+) => {
+
+    const finalStrategies = { ...RISK_STRATEGIES };
 
     return async (codes: PermissionCode[]): Promise<I_RiskInfo[]> => {
+        const activeCodes = new Set(codes);
+        if (activeCodes.has(PermissionCode.Application)) {
+            activeCodes.add(PermissionCode.Schema);
+        }
 
-        const newCodes = codes.includes(PermissionCode.Application) ? [...codes, PermissionCode.Schema] : codes;
-        const promises = newCodes.map(async (code) => {
-            const temp: I_RiskInfo = { uploadType: code };
-            try {
-                switch (code) {
-                    case PermissionCode.Application:
-                        if (getApkListInfo) temp.jsonPayload = await getApkListInfo();
-                        break;
-                    case PermissionCode.Contact:
-                        if (getContactInfo) temp.jsonPayload = await getContactInfo();
-                        break;
-                    case PermissionCode.SMS:
-                        if (getSMSInfo) temp.jsonPayload = gzip(await getSMSInfo());
-                        break;
-                    case PermissionCode.Location:
-                        if (getLocationInfo) temp.jsonPayload = await getLocationInfo();
-                        break;
-                    case PermissionCode.PhoneState:
-                        if (getPhoneState) temp.jsonPayload = await getPhoneState();
-                        break;
-                    case PermissionCode.CallLog:
-                        if (getCallLog) temp.jsonPayload = await getCallLog();
-                        break;
-                    case PermissionCode.Calendar:
-                        if (getCalendarInfo) temp.jsonPayload = await getCalendarInfo();
-                        break;
-                    case PermissionCode.Schema:
-                        if (getSchemaInfo && Platform.OS == "ios") temp.jsonPayload = await getSchemaInfo();
-                        break;
-                }
-                if (temp.jsonPayload === "[]" || temp.jsonPayload === "{}") {
-                    temp.isUploaded = NO_DATA;
-                }
-                return (temp.jsonPayload || temp.isUploaded) ? temp : null;
-            } catch (error) {
-                console.error(`[风控数据${Platform.OS}] 任务 ${code} 失败:`, error);
+        const tasks = Array.from(activeCodes).map(async (code) => {
+            const strategy = finalStrategies[code];
+            if (!strategy) return null;
+            if (strategy.platform && Platform.OS !== strategy.platform) return null;
+
+            const fetcher = sdk[strategy.method];
+            if (typeof fetcher !== 'function') return null;
+
+            const [err, rawData] = await to(fetcher.call(sdk));
+
+            if (err) {
+                console.error(`[风控数据${Platform.OS}] 任务 ${code} 失败:`, err);
                 return null;
             }
+
+            let payload = rawData || "";
+            const temp: I_RiskInfo = { uploadType: code };
+
+            if (strategy.compress && payload) {
+                payload = gzip(payload);
+            }
+
+            temp.jsonPayload = payload;
+
+            if (payload === "[]" || payload === "{}" || !payload) {
+                temp.isUploaded = NO_DATA;
+            }
+            return (temp.jsonPayload || temp.isUploaded) ? temp : null;
         });
 
-        const results = await Promise.all(promises);
+        const results = await Promise.all(tasks);
         return results.filter((item): item is I_RiskInfo => item !== null);
     };
 };
