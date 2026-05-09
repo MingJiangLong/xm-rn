@@ -27,6 +27,7 @@ export enum PermissionCode {
     Finger = "3",
     PersonalInfo = "9",
     Wifi = "11",
+    Schema = "13"
 }
 
 export const usePermission = <T extends I_PermissionBasicModule, F extends I_BasicFirebase & { requestCalendarPermission: (...args: any[]) => Promise<any> }>(

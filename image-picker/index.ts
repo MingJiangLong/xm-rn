@@ -1,57 +1,74 @@
+// 基础配置
 const IMAGE_DEFAULT_OPTION = {
     mediaType: 'photo',
     maxHeight: 1920,
     maxWidth: 1080,
     includeBase64: true,
-    quality: .5,
-} as const
+    quality: 0.5,
+} as const;
 
-
-type I_ImagePickerBasic = {
-    launchCamera: (...args: any[]) => Promise<any>
-    launchImageLibrary: (...args: any[]) => Promise<any>
+// 定义模块接口
+interface I_ImagePickerBasic {
+    launchCamera: (options: any) => Promise<any>;
+    launchImageLibrary: (options: any) => Promise<any>;
 }
 
+export class ImagePickerProvider {
+    private module: I_ImagePickerBasic | null = null;
 
-export const useImagePicker = <T extends I_ImagePickerBasic>(module: T) => {
+    init<T extends I_ImagePickerBasic>(module: T) {
+        this.module = module;
+    }
 
-    async function openCamera(options?: Parameters<T["launchCamera"]>[0]) {
+    private getModule() {
+        if (!this.module) {
+            throw new Error("[ImagePickerProvider] Module not injected");
+        }
+        return this.module;
+    }
+
+    /**
+     * 统一处理图片库返回的结果
+     */
+    private handleResponse(result: any) {
+        const assets = result?.assets;
+        const imageInfo = assets?.[0];
+        if (!imageInfo) return undefined;
+
+        return {
+            mimeType: imageInfo.type as string,
+            base64: imageInfo.base64 as string,
+            uri: imageInfo.uri as string,
+            name: imageInfo.fileName as string,
+        } as const;
+    }
+
+    /**
+     * 打开相机
+     */
+    async openCamera(options?: any) {
+        const module = this.getModule();
         const result = await module.launchCamera({
             ...IMAGE_DEFAULT_OPTION,
             presentationStyle: "fullScreen",
             ...options,
-        })
-        const assets = result?.assets
-        const imageInfo = assets?.[0];
-        if (!imageInfo) return undefined;
-        return {
-            mimeType: imageInfo.type,
-            base64: imageInfo.base64,
-            uri: imageInfo.uri,
-            name: imageInfo.fileName,
-        } as const
+        });
+        return this.handleResponse(result);
     }
-    async function openGallery(options?: Parameters<T["launchImageLibrary"]>[0]) {
+
+    /**
+     * 打开相册
+     */
+    async openGallery(options?: any) {
+        const module = this.getModule();
         const result = await module.launchImageLibrary({
             ...IMAGE_DEFAULT_OPTION,
             presentationStyle: "fullScreen",
-            ...options
-        })
-        const assets = result?.assets
-        const imageInfo = assets?.[0]
-        if (!imageInfo) return undefined;
-        return {
-            base64: `${imageInfo?.base64}`,
-            uri: imageInfo.uri,
-            name: imageInfo?.fileName,
-            mimeType: imageInfo?.type,
-        } as const
-    }
-
-
-
-    return {
-        openCamera,
-        openGallery
+            ...options,
+        });
+        return this.handleResponse(result);
     }
 }
+
+const ImagePickerProviderInstance = new ImagePickerProvider();
+export default ImagePickerProviderInstance;

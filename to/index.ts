@@ -1,37 +1,37 @@
+export function to<T, E = Error>(input: Promise<T>): Promise<[null, T] | [E, null]>;
 
-
-/**
- * 
- * @param fn 
- * 
- * @example
- * 
- * async function test(){
- *    const [error,data] = await to(async() => {})()
- * }
- * @returns 
- */
-export function to<T extends (...args: any[]) => Promise<any>, E = Error>(
-    fn: T
-) {
-    return async (...args: Parameters<T>): Promise<[E | null, Awaited<ReturnType<T>> | null]> => {
-        try {
-            const data: Awaited<ReturnType<T>> = await fn(...args);
-            return [null, data];
-        } catch (error) {
-            return [error as E, null]
-        }
+export async function to<T, E = Error>(
+    input: Promise<T>
+): Promise<[null, T] | [E, null]> {
+    try {
+        const data = await input;
+        return [null, data];
+    } catch (err) {
+        return [err as E, null];
     }
 }
-
-/** 要注意有些函数返回了null */
 export function toSync<T extends (...args: any) => any, E = Error>(fn: T) {
-    return (...args: Parameters<T>): [E | null, ReturnType<T> | null] => {
+    return (...args: Parameters<T>): [E, null] | [null, ReturnType<T>] => {
         try {
             const data = fn(...args);
-            return [null, data]
+            return [null, data];
         } catch (error) {
-            return [error as E, null]
+            return [error as E, null];
         }
-    }
+    };
 }
+
+
+// async function test() {
+
+//     return new Promise<number>((resolve, reject) => {
+//         setTimeout(() => {
+//             resolve(1)
+//         }, 1000);
+//     })
+// }
+
+// async function test2() {
+
+//     let [e, value] = await to(test())
+// }

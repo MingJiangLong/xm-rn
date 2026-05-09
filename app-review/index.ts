@@ -1,67 +1,83 @@
 import { Linking, Platform } from "react-native"
 import { to } from "../to"
-import { TerminalLog } from "../terminal-log/log"
 
 
 
-const terminal = new TerminalLog("[app-review] ")
 interface I_AppReviewModule {
-    isAvailable: () => boolean
-    RequestInAppReview: () => Promise<boolean>
-    fetchMarketUrl: () => Promise<string>
+    isAvailable: (...args: any[]) => boolean
+    RequestInAppReview: (...args: any[]) => Promise<boolean>
 }
 
-export const useAppReview = <T extends I_AppReviewModule>(appReview: T) => {
-    const openMarketUrl = to(
-        async (url: string) => {
-            const urlStr = `${url ?? ""}`
-            await Linking.openURL(urlStr)
-        }
-    )
-    const openMarketSchema = to(
-        async () => {
-            if (!appReview.isAvailable()) throw new Error("not supported app review")
-            const result = await appReview.RequestInAppReview()
-            if (result == false) throw new Error("not supported app review")
-        }
-    )
-    const reviewWhenIos = async (fetchSupermarketStr: () => Promise<string>) => {
-        const [error, url] = await to(fetchSupermarketStr)();
-        if (!!url?.length) {
-            return await openMarketUrl(url);
-        }
-        terminal.info("获取市场连接失败,切换为打开应用市场", error)
 
-        const [error1] = await openMarketSchema();
-        terminal.error("打开应用市场失败", error1)
+class AppReviewSDK {
+    private module: I_AppReviewModule | null = null;
+
+    constructor() {
+        this.module = null;
     }
 
-    const reviewWhenAndroid = async (fetchSupermarketStr: () => Promise<string>) => {
-        const [error,] = await openMarketSchema()
-        if (!error) return;
-        terminal.info("打开应用市场失败,切换为打开市场连接", error)
-        const [error2, url] = await to(fetchSupermarketStr)();
-        if (!url || error2) {
-            return terminal.info("获取市场连接失败", error)
+    init<T extends I_AppReviewModule>(module: T) {
+        this.module = module;
+    }
+
+    private isReady(): boolean {
+        return !!(this.module && typeof this.module.isAvailable === 'function');
+    }
+    private openMarketUrl = async (url: string) => {
+        const urlStr = `${url ?? ""}`;
+        if (!urlStr) return;
+        try {
+            await Linking.openURL(urlStr);
+        } catch (e) {
+            console.error("Linking.openURL failed", e);
         }
-        return await openMarketUrl(url)
+    };
+
+    private openMarketSchema = async (): Promise<boolean> => {
+        if (!this.isReady() || !this.module?.isAvailable()) {
+            return false;
+        }
+        try {
+            return await this.module.RequestInAppReview();
+        } catch (e) {
+            return false;
+        }
+    };
+
+    private async reviewWhenIos(fetchUrl: () => Promise<string>) {
+
+        const [_error, url] = await to(fetchUrl());
+        if (url && url.length > 0) {
+            return await this.openMarketUrl(url);
+        }
+        await this.openMarketSchema();
+    }
+
+    private async reviewWhenAndroid(fetchUrl: () => Promise<string>) {
+        const success = await this.openMarketSchema();
+        if (success) return;
+        const [_error, url] = await to(fetchUrl());
+        if (url && url.length > 0) {
+            await this.openMarketUrl(url);
+        }
     }
 
 
-    const openAppMarket = async () => {
+    async openAppMarket(fetchUrl?: () => Promise<string>) {
+        if (!this.isReady()) {
+            return console.error("AppReview module not injected");
+        }
         const callback = Platform.select({
-            android: reviewWhenAndroid,
-            ios: reviewWhenIos
-        })
-        if (!callback) return;
-        callback(appReview.fetchMarketUrl)
-    }
+            android: () => this.reviewWhenAndroid(fetchUrl ?? (() => Promise.resolve(""))),
+            ios: () => this.reviewWhenIos(fetchUrl ?? (() => Promise.resolve("")))
+        });
 
-    return {
-        openAppMarket,
-        openMarketSchema,
-        openMarketUrl
+        if (callback) {
+            await callback();
+        }
     }
 }
 
+const AppReviewProviderInstance = new AppReviewSDK();
+export default AppReviewProviderInstance;
 

@@ -1,91 +1,84 @@
-import { to } from "../to"
-import { addTimeout } from "../add-timeout"
-import { TimeoutError } from "../error"
+import { to } from "../to";
+import { addTimeout } from "../add-timeout";
+interface I_LocationBasic {
+    setRNConfiguration: (config: any) => void;
+    getCurrentPosition: (success: (info: any) => void, error: (err: any) => void, options: any) => void;
+}
 
-export interface I_LocationInfo {
-    latitude: number
-    longitude: number
-    is_current: boolean
+interface I_LocationInfo {
+    latitude: number;
+    longitude: number;
+    is_current: boolean;
 }
 
 
-type I_LocationBasic = {
-    setRNConfiguration: (...args: any[]) => void
-    getCurrentPosition: (...args: any[]) => void
-}
+export class LocationProvider {
+    private module: I_LocationBasic | null = null;
 
+    init<T extends I_LocationBasic>(module: T) {
+        this.module = module;
+    }
 
-export const useLocation = <T extends I_LocationBasic>(module: T) => {
+    private getModule() {
+        if (!this.module) {
+            throw new Error("[LocationProvider] Module not injected");
+        }
+        return this.module;
+    }
 
-    function getCurrentPosition() {
-        const fetchLocationPromise = new Promise<I_LocationInfo>((s, e) => {
-            module.setRNConfiguration({ skipPermissionRequests: true })
+    async getCurrentPosition(): Promise<I_LocationInfo> {
+
+        // 主动请求权限？
+        const module = this.getModule();
+        module.setRNConfiguration({ skipPermissionRequests: true })
+        const fetchLocationPromise = new Promise<I_LocationInfo>((resolve, reject) => {
             module.getCurrentPosition(
                 (info: any) => {
-                    s({
+                    resolve({
                         latitude: info.coords.latitude,
                         longitude: info.coords.longitude,
                         is_current: true
-                    })
+                    });
                 },
                 (error: any) => {
                     const code = error?.code;
-                    if (code == 2) return e(new TimeoutError(error))
-                    e(error)
+                    reject(error);
                 },
                 { timeout: 10000, enableHighAccuracy: false },
             );
-        })
-        return addTimeout(() => fetchLocationPromise)()
+        });
+
+        return addTimeout(() => fetchLocationPromise, 10 * 1000)();
     }
 
-
-    const fetchLocationDescUrl = function (latitude: number, longitude: number) {
-        return `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`
+    private getReverseGeocodeUrl(lat: number, lon: number) {
+        return `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`;
     }
 
-    /** @deprecated 使用原生转换 */
-    const getCurrentPositionDetail = (
-        async function () {
-            const location = await getCurrentPosition();
-            const [error, res] = await to(addTimeout(fetch))(fetchLocationDescUrl(location.latitude, location.longitude), { method: "GET" })
-            if (error || !res) return {
-                ...location,
-                is_current: true
-            }
+    /**
+     * 获取位置详细信息（包含地址、城市等）
+     */
+    async reversePosition(lat: number, lon: number) {
 
-            const tempData = await res.text()
-            const resJson = JSON.parse(tempData)
-            return {
-                address: resJson?.dispaly_name,
-                ...resJson?.address,
-                ...location
-            } as {
-                address?: string
-                city?: string
-                state?: string
-                country?: string
-                postcode?: string
-                province?: string
-                man_made?: string
-                road?: string
-                "ISO3166-2-lvl4"?: string
-            }
+
+        const url = this.getReverseGeocodeUrl(lat, lon);
+        const [error, res] = await to(
+            addTimeout(fetch)(url, { method: "GET" })
+        );
+        if (error || !res) {
+            return null;
         }
-    )
 
-    return {
-        getCurrentPosition,
-        getCurrentPositionDetail
+        try {
+            const tempData = await res.text();
+            const resJson = JSON.parse(tempData);
+            return resJson as Record<string, string>;
+        } catch (e) {
+            console.error("[reversePosition] reverse failed", e);
+            return null;
+        }
     }
-
-
-
 }
 
-
-
-
-
-
-
+const LocationProviderInstance = new LocationProvider();
+export default LocationProviderInstance;

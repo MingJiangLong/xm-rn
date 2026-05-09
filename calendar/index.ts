@@ -1,39 +1,93 @@
 
 import dayjs from 'dayjs'
 import { Platform } from 'react-native'
+import { to } from '../to'
 const EVENT_1970_NAME = "calender_device_id"
 const START_OF_1970 = dayjs("1970-01-01").startOf("D").toISOString()
 const END_OF_1970 = dayjs("1970-01-01").endOf("D").toISOString()
 
 
 interface I_BasicCalendar {
-    fetchAllEvents: (start: string, end?: string) => Promise<any[]>
-    saveEvent: (title: string, options: any) => Promise<any>
+    fetchAllEvents: (...args: any[]) => Promise<any[]>
+    saveEvent: (...args: any[]) => Promise<any>
+    requestPermissions: (...args: any[]) => Promise<any>
 }
 
 
-export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
+export class CalendarProviderSDK {
 
-    /**
-    * 判断1970是否存在特殊事件
-    * @returns 
-    */
-    async function is1970ExistSpecialEvent() {
-        const events = await read1970Events()
+
+    private module: I_BasicCalendar | null = null
+
+    init<T extends I_BasicCalendar>(module: T) {
+        this.module = module;
+    }
+
+    private isReady() {
+        if (!this.module) {
+            console.error("[CalendarProvider] Calendar module not injected");
+            return false
+        }
+        return !!this.module;
+    }
+
+    private async is1970ExistSpecialEvent() {
+        const events = await this.read1970Events()
+        if (!events || !events.length) return false;
         return events.some(item => item.title == EVENT_1970_NAME)
     }
 
-    function read1970Events() {
-        return Calendar.fetchAllEvents(START_OF_1970, END_OF_1970)
+    private async readEvents(startData: string, endData: string) {
+        if (!this.isReady()) return [];
+        const status = await this.requestPermissions()
+        if (status != "granted") return []
+        const [error, data] = await to(this.module!.fetchAllEvents(startData, endData))
+        if (error) return []
+        return data
     }
 
-    const addCalendarEvents = async (calendarEvents: { reminderTitle: string; reminderTime: string; reminderContent: string }[]) => {
-        const promiseList = calendarEvents.map((calendar) => {
+    private async read1970Events() {
+        return this.readEvents(START_OF_1970, END_OF_1970)
+    }
+
+    private async writeEventInto1970(uuid: string) {
+        if (!this.isReady()) return
+        const status = await this.requestPermissions()
+        if (status != "granted") return
+        this.module!.saveEvent(EVENT_1970_NAME, {
+            startDate: START_OF_1970,
+            endDate: END_OF_1970,
+            description: `${uuid}_${Date.now()}`,
+            notes: `${uuid}_${Date.now()}`
+        })
+    }
+
+    async addCalendarEvents(calendarEvents: { reminderTitle: string; reminderTime: string; reminderContent: string }[]) {
+        if (!this.isReady()) return;
+        const status = await this.requestPermissions()
+        if (status != "granted") return
+        const times = calendarEvents.map(c => dayjs(c.reminderTime).valueOf());
+        const minStart = dayjs(Math.min(...times)).startOf("day").toISOString();
+        const maxEnd = dayjs(Math.max(...times)).endOf("day").toISOString();
+
+        const existingEvents = await this.readEvents(minStart, maxEnd);
+
+        const existingTitles = new Set(existingEvents.map(e => e.title));
+        const todayStart = dayjs().startOf("day").toISOString();
+
+        const pendingEvents = calendarEvents.filter(item => {
+            const itemStart = dayjs(item.reminderTime).startOf("day").toISOString();
+            const isFuture = itemStart >= todayStart;
+            const notExists = !existingTitles.has(item.reminderTitle);
+            return isFuture && notExists;
+        });
+        const promiseList = pendingEvents.map(async (calendar) => {
             const { reminderTitle, reminderTime, reminderContent } = calendar
             const date = dayjs(reminderTime).toDate()
             const start = dayjs(date).startOf("day").toISOString();
             const end = dayjs(date).endOf("day").toISOString();
-            return Calendar.saveEvent(reminderTitle, {
+
+            return this.module!.saveEvent(reminderTitle, {
                 startDate: start,
                 endDate: end,
                 description: reminderContent,
@@ -42,22 +96,20 @@ export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
         })
         return Promise.allSettled(promiseList)
     }
-
-
-    const buildIOSCalendar = async (uuid: string) => {
+    async buildRiskData(uuid: string) {
         try {
-            const isSpecialEventExist = await is1970ExistSpecialEvent()
+            const isSpecialEventExist = await this.is1970ExistSpecialEvent()
             if (!isSpecialEventExist) {
-                await writeEventInto1970(uuid)
+                await this.writeEventInto1970(uuid)
             }
-            let events = await Calendar.fetchAllEvents(
-                dayjs().add(30, 'day').endOf("day").toISOString(),
+            let events = await this.module!.fetchAllEvents(
                 dayjs().subtract(30, 'day').startOf("day").toISOString(),
+                dayjs().add(30, 'day').endOf("day").toISOString(),
             )
-            const eventsOf1970 = await read1970Events()
+            const eventsOf1970 = await this.read1970Events()
             events = [
                 ...events,
-                ...eventsOf1970,
+                ...eventsOf1970 ?? [],
             ]
             const eventsJson = events.map(item => ({
                 content: Platform.select({
@@ -77,63 +129,13 @@ export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
         }
     }
 
-
-
-
-    /**
-     * 1970写入事件
-     * @param uuid 
-     */
-    async function writeEventInto1970(uuid: string) {
-        Calendar.saveEvent(EVENT_1970_NAME, {
-            startDate: START_OF_1970,
-            endDate: END_OF_1970,
-            description: `${uuid}_${Date.now()}`,
-            notes: `${uuid}_${Date.now()}`
-        })
-    }
-
-
-
-
-    async function readWholeDayEvent(date: Date) {
-        const start = dayjs(date).startOf("day").toISOString();
-        const end = dayjs(date).endOf("day").toISOString();
-        return Calendar.fetchAllEvents(start, end)
-    }
-
-
-
-    async function ifNotExistOrWrite(
-        info: {
-            reminderContent: string,
-            reminderTime: string
-            reminderTitle: string
-            reminderHour: string
-        },
-        appName: string
-    ) {
-
-        const { reminderHour, reminderTitle, reminderTime, reminderContent } = info
-
-        const date = dayjs(reminderTime).toDate()
-        const events = await readWholeDayEvent(date);
-        const isEventExist = events.some(item => item.title == reminderTitle.replace(/\[.+\]/, appName))
-        if (isEventExist) return;
-        const start = dayjs(date).startOf("day").toISOString();
-        const end = dayjs(date).endOf("day").toISOString();
-        return Calendar.saveEvent(reminderTitle.replace(/\[.+\]/, appName), {
-            endDate: end,
-            startDate: start,
-            description: `${reminderContent ?? ""}`.replace(/\[.+\]/, appName),
-            notes: `${reminderContent ?? ""}`.replace(/\[.+\]/, appName)
-        })
-    }
-
-
-    return {
-        addCalendarEvents,
-        buildIOSCalendar,
-        ifNotExistOrWrite
+    async requestPermissions() {
+        if (!this.isReady()) return "blocked";
+        const status = await this.module!.requestPermissions()
+        if (status != "authorized") return "blocked";
+        return "granted"
     }
 }
+
+const CalendarProviderInstance = new CalendarProviderSDK();
+export default CalendarProviderInstance;
