@@ -1,6 +1,5 @@
 import { Platform, PermissionsAndroid } from "react-native";
 
-// 定义接口，只包含我们用到的方法
 interface I_MessagingModule {
     (): {
         registerDeviceForRemoteMessages?: () => Promise<void>;
@@ -45,9 +44,6 @@ export class FirebaseProvider {
         }
     }
 
-    /**
-     * 获取推送 Token
-     */
     async getToken() {
         if (!this.messaging) {
             console.log('[Firebase] messaging module not injected');
@@ -75,9 +71,6 @@ export class FirebaseProvider {
         }
     }
 
-    /**
-     * 同时获取 Token 和 ID
-     */
     async getTokenAndAnalyticsId() {
         const [token, analyticsId] = await Promise.all([
             this.getToken().catch(() => null),
@@ -91,9 +84,6 @@ export class FirebaseProvider {
         return Object.keys(result).length > 0 ? result : null;
     }
 
-    /**
-     * 请求通知权限
-     */
     async requestNotificationPermission(): Promise<boolean> {
         if (!this.messaging) {
             console.log('[Firebase] messaging module not injected');
@@ -101,7 +91,6 @@ export class FirebaseProvider {
         }
 
         try {
-            // 1. 处理 Android 13+ 的原生权限
             if (Platform.OS === 'android' && Platform.Version >= 33) {
                 const granted = await PermissionsAndroid.request(
                     PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
@@ -111,9 +100,7 @@ export class FirebaseProvider {
                 }
             }
 
-            // 2. 调用 Firebase 的 requestPermission
             const authStatus = await this.messaging().requestPermission();
-            // 1: AUTHORIZED, 2: PROVISIONAL
             return authStatus === 1 || authStatus === 2;
         } catch (error) {
             console.error("[requestPermission] failed:", error);

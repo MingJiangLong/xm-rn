@@ -39,7 +39,6 @@ export class ApiInfo {
     constructor(public path: string, public desc: string) { }
 }
 
-/** 批量创建 API 信息 */
 export function createApis<T extends Record<string, string>>(apis: T, desc?: Partial<T>) {
     return Object.fromEntries(
         Object.entries(apis).map(([key, path]) => [
@@ -57,7 +56,6 @@ interface I_CreatePostFactoryOptions {
     buildHeaderFn?: () => Promise<Record<string, string>>;
 }
 
-/** 创建 POST 请求工厂 */
 export async function createPostFactory(factoryOptions: I_CreatePostFactoryOptions) {
     const {
         host,
@@ -67,7 +65,6 @@ export async function createPostFactory(factoryOptions: I_CreatePostFactoryOptio
         showLog = false,
     } = factoryOptions;
 
-    // 预加载基础数据
     const [baseData, baseHeaders] = await Promise.all([buildRequestDataFn(), buildHeaderFn()]);
 
     return async function <R = unknown, D = unknown>(
@@ -83,12 +80,10 @@ export async function createPostFactory(factoryOptions: I_CreatePostFactoryOptio
         const api = typeof urlInfo === "string" ? new ApiInfo(urlInfo, "unknown api") : urlInfo;
         const logger = new ApiLogger(api.desc, showLog);
 
-        // 处理 URL 拼接
         const safeHost = host.replace(/\/$/, "");
         const safePath = api.path.replace(/^\//, "");
         const url = `${safeHost}/${safePath}`;
 
-        // 合并数据与请求头
         const extraData = extraOptions?.buildRequestDataFn ? await extraOptions.buildRequestDataFn() : {};
         const requestData = { ...baseData, ...extraData, ...data };
 
@@ -101,7 +96,6 @@ export async function createPostFactory(factoryOptions: I_CreatePostFactoryOptio
 
         logger.logRequest(url, requestData);
 
-        // 实现超时逻辑
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), extraOptions?.timeout ?? timeout);
 
@@ -117,12 +111,10 @@ export async function createPostFactory(factoryOptions: I_CreatePostFactoryOptio
 
             let rawResult: any = await response.text();
 
-            // 拦截器处理
             if (extraOptions?.responseInterceptor) {
                 rawResult = await extraOptions.responseInterceptor(rawResult);
             }
 
-            // 解析 JSON 与业务校验
             try {
                 const json = typeof rawResult === "string" ? JSON.parse(rawResult) : rawResult;
 
@@ -133,14 +125,13 @@ export async function createPostFactory(factoryOptions: I_CreatePostFactoryOptio
                 logger.logResponse(json);
                 return json as R;
             } catch (e) {
-                // 如果是业务错误则继续抛出，否则按原样返回
                 if (e instanceof NotAuthenticatedError) throw e;
                 logger.logResponse(rawResult);
                 return rawResult as R;
             }
         } catch (error: any) {
             clearTimeout(timer);
-            const errInfo = error.name === "AbortError" ? new Error(`请求超时(${timeout}ms)`) : error;
+            const errInfo = error.name === "AbortError" ? new Error(`Timeout (${timeout}ms)`) : error;
             logger.logError(errInfo);
             throw errInfo;
         }
