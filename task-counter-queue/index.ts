@@ -1,4 +1,4 @@
-type Listener = (visible: boolean) => void;
+type Listener = (haveTask: boolean) => void;
 
 export class TaskCounterQueue {
     private queue: null[] = [];
