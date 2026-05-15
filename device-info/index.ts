@@ -56,14 +56,18 @@ class DeviceInfoProvider {
 
         if (/^[a-z]+-[A-Z]+$/.test(lang ?? "")) {
             this._language = lang;
+        } else {
+            throw new Error("[DeviceInfoProvider] Invalid language format");
         }
-        throw new Error("[DeviceInfoProvider] Invalid language format");
     }
     get language() {
+        // if (!this._language) {
+        //     throw new Error("[DeviceInfoProvider] Language not set");
+        // }
         return this._language;
     }
 
-    async buildDeviceInfo() {
+    buildDeviceInfo = async () => {
         const module = this.getModule();
         const [
             [_error, batteryCharging],

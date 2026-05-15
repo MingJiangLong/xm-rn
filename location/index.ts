@@ -26,9 +26,7 @@ export class LocationProvider {
         return this.module;
     }
 
-    async getCurrentPosition(): Promise<I_LocationInfo> {
-
-        // 主动请求权限？
+    getCurrentPosition = async (): Promise<I_LocationInfo> => {
         const module = this.getModule();
         module.setRNConfiguration({ skipPermissionRequests: true })
         const fetchLocationPromise = new Promise<I_LocationInfo>((resolve, reject) => {
@@ -59,8 +57,6 @@ export class LocationProvider {
      * 获取位置详细信息（包含地址、城市等）
      */
     async reversePosition(lat: number, lon: number) {
-
-
         const url = this.getReverseGeocodeUrl(lat, lon);
         const [error, res] = await to(
             addTimeout(fetch)(url, { method: "GET" })

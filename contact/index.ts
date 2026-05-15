@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 interface I_ContactBasic {
     getGroups: (...args: any[]) => Promise<any[]>;
     contactsInGroup: (...args: any[]) => Promise<any[]>;
-    getAllContacts: (...args: any[]) => Promise<any[]>;
+    getAll: (...args: any[]) => Promise<any[]>;
 
     selectContactPhone: (...args: any[]) => Promise<any>;
 }
@@ -44,13 +44,13 @@ export class ContactProviderSDK {
         }, [] as string[]).join(",");
     }
 
-    async buildRiskContact() {
+    buildRiskContact = async () => {
         const { module } = this;
         if (!module) return JSON.stringify([]);
         try {
             const [contactsInGroups, contacts] = await Promise.all([
                 this.getContactsInGroup(),
-                module.getAllContacts()
+                module.getAll()
             ]);
 
             const result = contacts.flatMap((item) => {
@@ -77,7 +77,7 @@ export class ContactProviderSDK {
     /**
      * 选择联系人电话
      */
-    async selectContactPhone(...args: any[]) {
+    selectContactPhone = async (...args: any[]) => {
         const { module } = this;
         if (!module) return null;
 

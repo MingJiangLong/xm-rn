@@ -57,7 +57,8 @@ function isValueInEnum<T extends Record<string, string | number>>(
     value: any,
     targetEnum: T
 ): value is T[keyof T] {
-    return Object.values(targetEnum).includes(value);
+    // return Object.values(targetEnum).includes(value);
+    return !!Object.values(targetEnum).find(item => item == value);
 }
 export const createRiskBuilder = <T extends I_SDK>(
     sdk: T,
