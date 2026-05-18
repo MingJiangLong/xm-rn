@@ -52,7 +52,7 @@ export const useContact = <T extends I_ContactBasic>(module: T) => {
                         name,
                         last_contact_time: 0,
                         phone: item2.number,
-                        create_time: `${Date.now()}`.slice(0, 10),
+                        // create_time: `${Date.now()}`.slice(0, 10),
                         groups: findGroupsForContact(item.recordID, contactsInGroups),
                     })
                 })
