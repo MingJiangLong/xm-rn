@@ -43,7 +43,7 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
         const result = {
             appChannel: Platform.OS,
             model: DeviceInfo.getDeviceId(),
-            manufacturer: 'apple',
+            manufacturer: 'Apple',
             systemVersion: DeviceInfo.getSystemVersion(),
             batteryPercentage: toFixed(await DeviceInfo.getBatteryLevel()),
             appName: DeviceInfo.getApplicationName(),
@@ -53,7 +53,7 @@ export const useDeviceInfo = <T extends I_DeviceBasicModule>(DeviceInfo: T) => {
             rooted: await DeviceInfo.check(),  //是否越狱
             publicIpAddress: await fetchIpAddress(), //
             deviceNo: await DeviceInfo.getUniqueId(),
-            deviceName: await DeviceInfo.getDeviceName(),
+            deviceName: "iPhone",
         };
         return JSON.stringify(result)
     }
