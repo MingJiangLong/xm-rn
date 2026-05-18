@@ -5,9 +5,21 @@ interface I_BasicModule {
 }
 
 
-export const useAppsFlyer = <T extends I_BasicModule>(module: T) => {
+export class AppsFlyerProvider<T extends I_BasicModule> {
 
-    const initSdk = (options: Parameters<T["initSdk"]>[0]) => {
+
+    private module: T | null = null;
+    getModule() {
+        if (!this.module) {
+            throw new Error("[AppsFlyerProvider] Module not injected");
+        }
+        return this.module;
+    }
+    init(module: T) {
+        this.module = module;
+    }
+    initSdk = (options: Parameters<T["initSdk"]>[0]) => {
+        const module = this.getModule();
         return module.initSdk({
             onInstallConversionDataListener: true,
             onDeepLinkListener: true,
@@ -15,17 +27,23 @@ export const useAppsFlyer = <T extends I_BasicModule>(module: T) => {
             ...options
         })
     }
-    const getAppsFlyerUID = () => {
-        return new Promise<string>((s, e) => {
-            module.getAppsFlyerUID((error: any, uid) => {
 
-                if (error) return e(error)
-                s(uid)
+
+
+    getAppsFlyerUID = async () => {
+        const module = this.getModule();
+        return new Promise<string>((resolve, reject) => {
+            module.getAppsFlyerUID((error, uid) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(uid);
+                }
             })
         })
     }
-
-    const setCustomerUserId = (userId: string) => {
+    setCustomerUserId = (userId: string) => {
+        const module = this.getModule();
         return new Promise<boolean>((s, e) => {
             module.setCustomerUserId(userId, (error) => {
                 if (error) return e(error)
@@ -34,11 +52,5 @@ export const useAppsFlyer = <T extends I_BasicModule>(module: T) => {
         })
 
     }
-
-
-    return {
-        initSdk,
-        getAppsFlyerUID,
-        setCustomerUserId
-    }
 }
+export const AppsFlyerProviderInstance = new AppsFlyerProvider();

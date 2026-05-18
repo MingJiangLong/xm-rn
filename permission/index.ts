@@ -106,7 +106,10 @@ class PermissionProvider {
 
 
     private getHandler(code: Permission | string): PermissionHandler | undefined {
+
+
         return this.customMapping[code] || this.defaultMapping[code];
+
     }
 
     private parseStatus(engine: IPermissionEngine, status: string): PermissionStatus {
@@ -120,8 +123,7 @@ class PermissionProvider {
 
 
     /** 请求权限 */
-    async request(code: Permission | string): Promise<PermissionStatus> {
-
+    request = async (code: Permission | string): Promise<PermissionStatus> => {
         const handler = this.getHandler(code);
         if (!handler) throw new Error(`${code} request handler not found`);
         try {
@@ -131,6 +133,16 @@ class PermissionProvider {
         }
     }
 
+    requestMultiple = async (
+        codes: (Permission | string)[],
+    ) => {
+        const result: Array<{ code: Permission | string; status: PermissionStatus }> = [];
+        for (const code of codes) {
+            const status = await this.request(code).catch(() => 'unavailable' as PermissionStatus);
+            result.push({ code, status });
+        }
+        return result;
+    }
 }
 
 const PermissionProviderInstance = new PermissionProvider();

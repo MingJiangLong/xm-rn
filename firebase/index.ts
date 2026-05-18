@@ -1,4 +1,5 @@
 import { Platform, PermissionsAndroid } from "react-native";
+import { to } from "../to";
 
 interface I_MessagingModule {
     (): {
@@ -29,22 +30,21 @@ export class FirebaseProvider {
     }
 
 
-    async getAnalyticsId() {
+    getAnalyticsId = async () => {
         if (!this.analytics) {
             console.log('[Firebase] analytics module not injected');
             return null;
         }
 
-        try {
-            const instanceId = await this.analytics().getAppInstanceId();
-            return instanceId;
-        } catch (error: any) {
+        const [error, instanceId] = await to(this.analytics().getAppInstanceId())
+        if (error) {
             console.warn('[getAnalyticsId] failed', error.message);
-            return null;
-        }
+            return null
+        };
+        return instanceId
     }
 
-    async getToken() {
+    getToken = async () => {
         if (!this.messaging) {
             console.log('[Firebase] messaging module not injected');
             return null;
@@ -71,7 +71,7 @@ export class FirebaseProvider {
         }
     }
 
-    async getTokenAndAnalyticsId() {
+    getTokenAndAnalyticsId = async () => {
         const [token, analyticsId] = await Promise.all([
             this.getToken().catch(() => null),
             this.getAnalyticsId().catch(() => null),
@@ -84,7 +84,7 @@ export class FirebaseProvider {
         return Object.keys(result).length > 0 ? result : null;
     }
 
-    async requestNotificationPermission(): Promise<boolean> {
+    requestNotificationPermission = async (): Promise<boolean> => {
         if (!this.messaging) {
             console.log('[Firebase] messaging module not injected');
             return false;

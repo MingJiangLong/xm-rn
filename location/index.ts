@@ -1,5 +1,6 @@
 import { to } from "../to";
 import { addTimeout } from "../add-timeout";
+import { TimeoutError } from "../error";
 interface I_LocationBasic {
     setRNConfiguration: (config: any) => void;
     getCurrentPosition: (success: (info: any) => void, error: (err: any) => void, options: any) => void;
@@ -26,7 +27,7 @@ export class LocationProvider {
         return this.module;
     }
 
-    getCurrentPosition = async (): Promise<I_LocationInfo> => {
+    getCurrentPosition = async (): Promise<I_LocationInfo | null> => {
         const module = this.getModule();
         module.setRNConfiguration({ skipPermissionRequests: true })
         const fetchLocationPromise = new Promise<I_LocationInfo>((resolve, reject) => {
@@ -46,7 +47,12 @@ export class LocationProvider {
             );
         });
 
-        return addTimeout(() => fetchLocationPromise, 10 * 1000)();
+        const [_error, location] = await to(addTimeout(() => fetchLocationPromise, 10 * 1000)());
+        if (_error) {
+            if (_error instanceof TimeoutError) return null;
+            throw _error;
+        }
+        return location
     }
 
     private getReverseGeocodeUrl(lat: number, lon: number) {

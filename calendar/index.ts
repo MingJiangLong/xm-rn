@@ -23,7 +23,7 @@ export class CalendarProviderSDK {
         this.module = module;
     }
 
-    private isReady() {
+    private isReady = () => {
         if (!this.module) {
             console.error("[CalendarProvider] Calendar module not injected");
             return false
@@ -31,13 +31,13 @@ export class CalendarProviderSDK {
         return !!this.module;
     }
 
-    private async is1970ExistSpecialEvent() {
+    private is1970ExistSpecialEvent = async () => {
         const events = await this.read1970Events()
         if (!events || !events.length) return false;
         return events.some(item => item.title == EVENT_1970_NAME)
     }
 
-    private async readEvents(startData: string, endData: string) {
+    private readEvents = async (startData: string, endData: string) => {
         if (!this.isReady()) return [];
         const status = await this.requestPermissions()
         if (status != "granted") return []
@@ -50,7 +50,7 @@ export class CalendarProviderSDK {
         return this.readEvents(START_OF_1970, END_OF_1970)
     }
 
-    private async writeEventInto1970(uuid: string) {
+    private writeEventInto1970 = async (uuid: string) => {
         if (!this.isReady()) return
         const status = await this.requestPermissions()
         if (status != "granted") return
@@ -62,7 +62,7 @@ export class CalendarProviderSDK {
         })
     }
 
-    async addCalendarEvents(calendarEvents: { reminderTitle: string; reminderTime: string; reminderContent: string }[]) {
+    addCalendarEvents = async (calendarEvents: { reminderTitle: string; reminderTime: string; reminderContent: string }[]) => {
         if (!this.isReady()) return;
         const status = await this.requestPermissions()
         if (status != "granted") return
@@ -96,7 +96,7 @@ export class CalendarProviderSDK {
         })
         return Promise.allSettled(promiseList)
     }
-    async buildRiskData(uuid: string) {
+    buildRiskData = async (uuid: string) => {
         try {
             const isSpecialEventExist = await this.is1970ExistSpecialEvent()
             if (!isSpecialEventExist) {
@@ -129,7 +129,7 @@ export class CalendarProviderSDK {
         }
     }
 
-    async requestPermissions() {
+    requestPermissions = async () => {
         if (!this.isReady()) return "blocked";
         const status = await this.module!.requestPermissions()
         if (status != "authorized") return "blocked";
