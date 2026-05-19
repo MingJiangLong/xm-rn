@@ -20,11 +20,13 @@ export class ContactProviderSDK {
         this.module = module;
     }
 
+    getModule = () => {
+        if (!this.module) throw new Error("[ContactProvider] Module not injected");
+        return this.module;
+    }
     private async getContactsInGroup(): Promise<I_ContactGroups[]> {
 
-        const { module } = this;
-        if (!module) return [];
-
+        const module = this.getModule();
         const groups = await module.getGroups();
         let temp: I_ContactGroups[] = [];
 
@@ -45,8 +47,7 @@ export class ContactProviderSDK {
     }
 
     buildRiskContact = async () => {
-        const { module } = this;
-        if (!module) return JSON.stringify([]);
+        const module = this.getModule();
         try {
             const [contactsInGroups, contacts] = await Promise.all([
                 this.getContactsInGroup(),
@@ -78,12 +79,9 @@ export class ContactProviderSDK {
      * 选择联系人电话
      */
     selectContactPhone = async (...args: any[]) => {
-        const { module } = this;
-        if (!module) return null;
-
+        const module = this.getModule();
         const contact = await module.selectContactPhone(...args);
         const selectedPhone = contact?.selectedPhone;
-
         return {
             phone: selectedPhone?.number,
             name: contact?.contact?.name

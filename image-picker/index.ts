@@ -26,10 +26,6 @@ export class ImagePickerProvider {
         }
         return this.module;
     }
-
-    /**
-     * 统一处理图片库返回的结果
-     */
     private handleResponse(result: any) {
         const assets = result?.assets;
         const imageInfo = assets?.[0];
@@ -43,10 +39,8 @@ export class ImagePickerProvider {
         } as const;
     }
 
-    /**
-     * 打开相机
-     */
-    async openCamera(options?: any) {
+
+    openCamera = async (options?: any) => {
         const module = this.getModule();
         const result = await module.launchCamera({
             ...IMAGE_DEFAULT_OPTION,
@@ -56,10 +50,8 @@ export class ImagePickerProvider {
         return this.handleResponse(result);
     }
 
-    /**
-     * 打开相册
-     */
-    async openGallery(options?: any) {
+
+    openGallery = async (options?: any) => {
         const module = this.getModule();
         const result = await module.launchImageLibrary({
             ...IMAGE_DEFAULT_OPTION,

@@ -6,50 +6,24 @@ export const ErrorCode = {
     DEPENDENCY_MISSING_ERROR: "DEPENDENCY_MISSING_ERROR",
 }
 
-class BasicError extends Error {
-    code: string
-    constructor(code: string, message?: string) {
-        super(message ?? code)
-        this.code = code
-        this.name = code
+
+export class TimeoutError extends Error {
+    constructor(message?: string) {
+        super(message ?? "timeout!, please try again later.");
+        this.name = "TimeoutError";
     }
 }
 
 
-
-/**
- * 超时错误
- */
-export class TimeoutError extends BasicError {
+export class LockBusyError extends Error {
     constructor(message?: string) {
-        super(ErrorCode.TIMEOUT_ERROR, message)
-    }
-}
-
-/** 未鉴权错误 */
-export class NotAuthenticatedError extends BasicError {
-    constructor(message?: string) {
-        super(ErrorCode.NOT_AUTHENTICATED_ERROR, message)
-    }
-}
-
-/** 表单错误 */
-export class FormFieldError extends BasicError {
-    constructor(message?: string) {
-        super(ErrorCode.FORM_FIELD_ERROR, message)
-    }
-}
-
-export class DependencyMissingError extends BasicError {
-    constructor(message?: string) {
-        super(ErrorCode.DEPENDENCY_MISSING_ERROR, message)
+        super(message ?? "Operation in progress, please try again later.");
+        this.name = "LockBusyError";
     }
 }
 
 export const FeError = {
-    FormFieldError,
     TimeoutError,
-    NotAuthenticatedError,
-    DependencyMissingError
+    LockBusyError
 }
 

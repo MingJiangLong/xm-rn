@@ -27,10 +27,10 @@ export class LocationProvider {
         return this.module;
     }
 
-    getCurrentPosition = async (): Promise<I_LocationInfo | null> => {
+    getCurrentPosition = async (): Promise<I_LocationInfo> => {
         const module = this.getModule();
         module.setRNConfiguration({ skipPermissionRequests: true })
-        const fetchLocationPromise = new Promise<I_LocationInfo>((resolve, reject) => {
+        return new Promise<I_LocationInfo>((resolve, reject) => {
             module.getCurrentPosition(
                 (info: any) => {
                     resolve({
@@ -41,18 +41,16 @@ export class LocationProvider {
                 },
                 (error: any) => {
                     const code = error?.code;
+                    if (code == 3) {
+                        return reject(new TimeoutError())
+                    }
                     reject(error);
                 },
                 { timeout: 10000, enableHighAccuracy: false },
             );
         });
 
-        const [_error, location] = await to(addTimeout(() => fetchLocationPromise, 10 * 1000)());
-        if (_error) {
-            if (_error instanceof TimeoutError) return null;
-            throw _error;
-        }
-        return location
+
     }
 
     private getReverseGeocodeUrl(lat: number, lon: number) {
@@ -64,21 +62,11 @@ export class LocationProvider {
      */
     async reversePosition(lat: number, lon: number) {
         const url = this.getReverseGeocodeUrl(lat, lon);
-        const [error, res] = await to(
-            addTimeout(fetch)(url, { method: "GET" })
-        );
-        if (error || !res) {
-            return null;
-        }
+        const res = await addTimeout(fetch)(url, { method: "GET" })
+        const tempData = await res.text();
+        const resJson = JSON.parse(tempData);
+        return resJson as Record<string, string>;
 
-        try {
-            const tempData = await res.text();
-            const resJson = JSON.parse(tempData);
-            return resJson as Record<string, string>;
-        } catch (e) {
-            console.error("[reversePosition] reverse failed", e);
-            return null;
-        }
     }
 }
 

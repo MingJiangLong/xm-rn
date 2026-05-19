@@ -23,12 +23,10 @@ export class CalendarProviderSDK {
         this.module = module;
     }
 
-    private isReady = () => {
-        if (!this.module) {
-            console.error("[CalendarProvider] Calendar module not injected");
-            return false
-        }
-        return !!this.module;
+
+    getModule() {
+        if (!this.module) throw new Error("[CalendarProvider] Calendar module not injected")
+        return this.module;
     }
 
     private is1970ExistSpecialEvent = async () => {
@@ -38,12 +36,11 @@ export class CalendarProviderSDK {
     }
 
     private readEvents = async (startData: string, endData: string) => {
-        if (!this.isReady()) return [];
+        const module = this.getModule();
         const status = await this.requestPermissions()
         if (status != "granted") return []
-        const [error, data] = await to(this.module!.fetchAllEvents(startData, endData))
-        if (error) return []
-        return data
+        const [error, data] = await to(module.fetchAllEvents(startData, endData))
+        return data ?? []
     }
 
     private async read1970Events() {
@@ -51,10 +48,10 @@ export class CalendarProviderSDK {
     }
 
     private writeEventInto1970 = async (uuid: string) => {
-        if (!this.isReady()) return
+        const module = this.getModule()
         const status = await this.requestPermissions()
         if (status != "granted") return
-        this.module!.saveEvent(EVENT_1970_NAME, {
+        module.saveEvent(EVENT_1970_NAME, {
             startDate: START_OF_1970,
             endDate: END_OF_1970,
             description: `${uuid}_${Date.now()}`,
@@ -63,7 +60,7 @@ export class CalendarProviderSDK {
     }
 
     addCalendarEvents = async (calendarEvents: { reminderTitle: string; reminderTime: string; reminderContent: string }[]) => {
-        if (!this.isReady()) return;
+        const module = this.getModule()
         const status = await this.requestPermissions()
         if (status != "granted") return
         const times = calendarEvents.map(c => dayjs(c.reminderTime).valueOf());
@@ -87,7 +84,7 @@ export class CalendarProviderSDK {
             const start = dayjs(date).startOf("day").toISOString();
             const end = dayjs(date).endOf("day").toISOString();
 
-            return this.module!.saveEvent(reminderTitle, {
+            return module.saveEvent(reminderTitle, {
                 startDate: start,
                 endDate: end,
                 description: reminderContent,
@@ -98,11 +95,12 @@ export class CalendarProviderSDK {
     }
     buildRiskData = async (uuid: string) => {
         try {
+            const module = this.getModule();
             const isSpecialEventExist = await this.is1970ExistSpecialEvent()
             if (!isSpecialEventExist) {
                 await this.writeEventInto1970(uuid)
             }
-            let events = await this.module!.fetchAllEvents(
+            let events = await module.fetchAllEvents(
                 dayjs().subtract(30, 'day').startOf("day").toISOString(),
                 dayjs().add(30, 'day').endOf("day").toISOString(),
             )
@@ -130,8 +128,8 @@ export class CalendarProviderSDK {
     }
 
     requestPermissions = async () => {
-        if (!this.isReady()) return "blocked";
-        const status = await this.module!.requestPermissions()
+        const module = this.getModule();
+        const status = await module.requestPermissions()
         if (status != "authorized") return "blocked";
         return "granted"
     }

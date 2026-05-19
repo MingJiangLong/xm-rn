@@ -9,7 +9,7 @@ interface I_AppReviewModule {
 }
 
 
-class AppReviewSDK {
+class AppReviewProvider {
     private module: I_AppReviewModule | null = null;
 
     constructor() {
@@ -20,32 +20,28 @@ class AppReviewSDK {
         this.module = module;
     }
 
-    private isReady(): boolean {
-        return !!(this.module && typeof this.module.isAvailable === 'function');
+
+
+    private getModule() {
+        if (!this.module) {
+            throw new Error('[AppReviewProvider] Module not injected');
+        }
+        return this.module;
     }
     private openMarketUrl = async (url: string) => {
         const urlStr = `${url ?? ""}`;
         if (!urlStr) return;
-        try {
-            await Linking.openURL(urlStr);
-        } catch (e) {
-            console.error("Linking.openURL failed", e);
-        }
+        await Linking.openURL(urlStr);
+
     };
 
     private openMarketSchema = async (): Promise<boolean> => {
-        if (!this.isReady() || !this.module?.isAvailable()) {
-            return false;
-        }
-        try {
-            return await this.module.RequestInAppReview();
-        } catch (e) {
-            return false;
-        }
+        const module = this.getModule();
+        return module.RequestInAppReview();
+
     };
 
     private async reviewWhenIos(fetchUrl: () => Promise<string>) {
-
         const [_error, url] = await to(fetchUrl());
         if (url && url.length > 0) {
             return await this.openMarketUrl(url);
@@ -64,9 +60,6 @@ class AppReviewSDK {
 
 
     async openAppMarket(fetchUrl?: () => Promise<string>) {
-        if (!this.isReady()) {
-            return console.error("AppReview module not injected");
-        }
         const callback = Platform.select({
             android: () => this.reviewWhenAndroid(fetchUrl ?? (() => Promise.resolve(""))),
             ios: () => this.reviewWhenIos(fetchUrl ?? (() => Promise.resolve("")))
@@ -78,6 +71,6 @@ class AppReviewSDK {
     }
 }
 
-const AppReviewProviderInstance = new AppReviewSDK();
+const AppReviewProviderInstance = new AppReviewProvider();
 export default AppReviewProviderInstance;
 

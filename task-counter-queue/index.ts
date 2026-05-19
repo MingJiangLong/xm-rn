@@ -14,13 +14,11 @@ export class TaskCounterQueue {
         this.listeners.forEach((listener) => listener(this.queue.length > 0));
     }
 
-    // 入队：只负责 push，闭眼添加
     push() {
         this.queue.push(null);
         this.notify();
     }
 
-    // 出队：只负责 shift，严格遵循先进先出
     shift() {
         if (this.queue.length > 0) {
             this.queue.shift();

@@ -61,9 +61,9 @@ class DeviceInfoProvider {
         }
     }
     get language() {
-        // if (!this._language) {
-        //     throw new Error("[DeviceInfoProvider] Language not set");
-        // }
+        if (!this._language) {
+            throw new Error("[DeviceInfoProvider] Language not set");
+        }
         return this._language;
     }
 

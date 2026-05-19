@@ -28,15 +28,20 @@ export class FirebaseProvider {
         this.messaging = modules.messaging || null;
         this.analytics = modules.analytics || null;
     }
+    getMessagingModule() {
+        if (!this.messaging) throw new Error('[FirebaseProvider] messaging module not injected')
+        return this.messaging
+    }
 
+    getAnalyticsModule() {
+        if (!this.analytics) throw new Error('[FirebaseProvider] analytics module not injected')
+        return this.analytics
+    }
 
     getAnalyticsId = async () => {
-        if (!this.analytics) {
-            console.log('[Firebase] analytics module not injected');
-            return null;
-        }
+        const analytics = this.getAnalyticsModule()
 
-        const [error, instanceId] = await to(this.analytics().getAppInstanceId())
+        const [error, instanceId] = await to(analytics().getAppInstanceId())
         if (error) {
             console.warn('[getAnalyticsId] failed', error.message);
             return null
@@ -44,14 +49,16 @@ export class FirebaseProvider {
         return instanceId
     }
 
+
+
     getToken = async () => {
         if (!this.messaging) {
             console.log('[Firebase] messaging module not injected');
             return null;
         }
-
+        const messaging = this.getMessagingModule()
         try {
-            const messagingInstance = this.messaging();
+            const messagingInstance = messaging();
             if (messagingInstance.registerDeviceForRemoteMessages) {
                 await messagingInstance.registerDeviceForRemoteMessages();
             }
@@ -85,11 +92,7 @@ export class FirebaseProvider {
     }
 
     requestNotificationPermission = async (): Promise<boolean> => {
-        if (!this.messaging) {
-            console.log('[Firebase] messaging module not injected');
-            return false;
-        }
-
+        const messaging = this.getMessagingModule();
         try {
             if (Platform.OS === 'android' && Platform.Version >= 33) {
                 const granted = await PermissionsAndroid.request(
@@ -100,7 +103,7 @@ export class FirebaseProvider {
                 }
             }
 
-            const authStatus = await this.messaging().requestPermission();
+            const authStatus = await messaging().requestPermission();
             return authStatus === 1 || authStatus === 2;
         } catch (error) {
             console.error("[requestPermission] failed:", error);
