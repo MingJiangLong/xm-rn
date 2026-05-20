@@ -23,15 +23,16 @@ export enum RiskData {
     CallLog = "7"
 }
 
+type PlatformValue = typeof Platform.OS;
 export interface I_SDK {
-    getApkListInfo?: () => Promise<string>;
-    getContactInfo?: () => Promise<string>;
-    getSMSInfo?: () => Promise<string>;
-    getPhoneState?: () => Promise<string>;
-    getCallLog?: () => Promise<string>;
-    getLocationInfo?: () => Promise<string>;
-    getCalendarInfo?: () => Promise<string>;
-    getSchemaInfo?: () => Promise<string>;
+    getApkListInfo?: (platform: PlatformValue) => Promise<string>;
+    getContactInfo?: (platform: PlatformValue) => Promise<string>;
+    getSMSInfo?: (platform: PlatformValue) => Promise<string>;
+    getPhoneState?: (platform: PlatformValue) => Promise<string>;
+    getCallLog?: (platform: PlatformValue) => Promise<string>;
+    getLocationInfo?: (platform: PlatformValue) => Promise<string>;
+    getCalendarInfo?: (platform: PlatformValue) => Promise<string>;
+    getSchemaInfo?: (platform: PlatformValue) => Promise<string>;
 }
 type StrategyConfig = {
     method: keyof I_SDK;
@@ -84,8 +85,8 @@ export const createRiskBuilder = <T extends I_SDK>(
 
             const fetcher = sdk[strategy.method];
             if (typeof fetcher !== 'function') return null;
-
-            const [err, rawData] = await to(fetcher.call(sdk));
+            const platform = Platform.OS
+            const [err, rawData] = await to(fetcher.call(sdk, platform));
 
             if (err) {
                 console.error(`[Risk Build] ${code} failed:`, err);
