@@ -51,7 +51,7 @@ export class CalendarProviderSDK {
         const module = this.getModule()
         const status = await this.requestPermissions()
         if (status != "granted") return
-        module.saveEvent(EVENT_1970_NAME, {
+        return module.saveEvent(EVENT_1970_NAME, {
             startDate: START_OF_1970,
             endDate: END_OF_1970,
             description: `${uuid}_${Date.now()}`,
