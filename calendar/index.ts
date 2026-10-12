@@ -85,7 +85,7 @@ export const useCalendar = <T extends I_BasicCalendar>(Calendar: T) => {
      * @param uuid 
      */
     async function writeEventInto1970(uuid: string) {
-        Calendar.saveEvent(EVENT_1970_NAME, {
+        return Calendar.saveEvent(EVENT_1970_NAME, {
             startDate: START_OF_1970,
             endDate: END_OF_1970,
             description: `${uuid}_${Date.now()}`,
